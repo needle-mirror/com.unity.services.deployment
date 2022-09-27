@@ -1,0 +1,67 @@
+.deployment-window-column-1 {
+    width: 40%;
+    flex: 1 1 40%;
+    align-items: center;
+}
+
+.deployment-window-column-2 {
+    width: 20%;
+    flex: 1 1 20%;
+}
+
+.deployment-window-column-3 {
+    width: 16%;
+    flex: 1 1 16%;
+}
+
+.deployment-window-column-4 {
+    width: 24%;
+    flex: 1 1 24%;
+}
+
+.center-content {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-message {
+    margin: 4px 0;
+    white-space: normal;
+    -unity-text-align: upper-center;
+    max-width: 320px;
+}
+
+.status-message__container {
+    padding: 8px;
+}
+
+.status-button__container {
+    margin-top: 6px;
+}
+
+.hidden {
+    display: none;
+}
+
+.grow {
+    flex-grow: 1;
+}
+
+ToolbarMenu.menu {
+    background-image: var(--unity-icons-pane_options);
+    padding-left: 9px;
+    padding-right: 10px;
+    border-right-width: 0;
+}
+
+.link-text {
+    color: var(--unity-colors-link-text);
+    background-image: none;
+    background-color: transparent;
+    border-width: 0 0 1px 0;
+    border-color: var(--unity-colors-link-text);
+    padding: 0;
+    border-radius: 0;
+}

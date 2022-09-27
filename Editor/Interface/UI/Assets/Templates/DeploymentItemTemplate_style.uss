@@ -1,0 +1,98 @@
+:root {
+    --dw-progress-background: rgba(48, 48, 48, 0.7);
+    --dw-progress-border: #252525;
+    --dw-progress: rgba(255, 255, 255, 0.9);
+    --dw-progress-error: #868686;
+}
+
+.deployment-item-container {
+    display: flex;
+    flex-direction: row;
+    padding: 4px 8px 4px 15px;
+    flex-grow: 1;
+}
+
+.deployment-item-label {
+    flex-grow: 1;
+    height: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -unity-text-align: upper-left;
+}
+
+.warning .deployment-item-label, .error .deployment-item-label {
+    width: 85%;
+}
+
+.warning .deployment-item-icon{
+    background-image: var(--unity-icons-console_entry_warn);
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    margin-right: 3px;
+}
+
+.error .deployment-item-icon {
+    background-image: var(--unity-icons-console_entry_error);
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    margin-right: 3px;
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.deployment-item-selectable {
+    margin: 0;
+}
+
+.deployment-item-selectable:checked .unity-label {
+    color: var(--unity-colors-highlight-text-inactive);
+}
+
+.deployment-item-selectable:hover {
+    background-color: var(--unity-colors-highlight-background-hover);
+}
+
+.deployment-item-progress-bar {
+    padding-right: 40px;
+    height: 12px;
+}
+
+.deployment-item-progress-bar .unity-progress-bar__background {
+    position: relative;
+    border-radius: 5px;
+}
+
+.deployment-item-progress-bar .unity-progress-bar__progress {
+    background-color: var(--dw-progress);
+    border-radius: 5px;
+}
+
+.deployment-item-selectable:checked .unity-progress-bar__background {
+    background-color: var(--dw-progress-background);
+    border-color: var(--dw-progress-border);
+}
+
+.error .deployment-item-progress-bar .unity-progress-bar__progress {
+    background-color: var(--dw-progress-error);
+}
+
+.deployment-item-progress-bar .unity-progress-bar__title-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.deployment-item-progress-bar .unity-progress-bar__title {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 6px;
+    color: var(--unity-colors-default-text);
+}

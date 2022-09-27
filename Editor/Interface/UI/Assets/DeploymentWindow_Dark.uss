@@ -1,0 +1,3 @@
+.help-button {
+    background-image: resource("d_Help.png");
+}

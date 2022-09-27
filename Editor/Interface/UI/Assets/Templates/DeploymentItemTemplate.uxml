@@ -1,0 +1,23 @@
+<ui:UXML
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:uie="UnityEditor.UIElements"
+    xmlns:dwc="Unity.Services.Deployment.Editor.Interface.UI.Components"
+    xsi="http://www.w3.org/2001/XMLSchema-instance"
+    engine="UnityEngine.UIElements"
+    editor="UnityEditor.UIElements"
+    noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd"
+    editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.services.deployment/Editor/Interface/UI/Assets/DeploymentShared_style.uss" />
+    <Style src="project://database/Packages/com.unity.services.deployment/Editor/Interface/UI/Assets/Templates/DeploymentItemTemplate_style.uss" />
+    <dwc:Selectable text="" class="deployment-item-selectable">
+        <ui:VisualElement class="deployment-item-container row" style="width: initial;">
+            <ui:VisualElement class="deployment-window-column-1" style="flex-direction: row;">
+                <ui:VisualElement name="ItemStatusIcon" class="deployment-item-icon"/>
+                <ui:Label text="Sit Amet" display-tooltip-when-elided="true" name="ItemName" class="deployment-item-label" />
+            </ui:VisualElement>
+            <ui:Label text="Sit Amet" display-tooltip-when-elided="true" name="ItemService" class="deployment-item-label deployment-window-column-2" />
+            <ui:Label text="Sit Amet" display-tooltip-when-elided="true" name="ItemStatus" class="deployment-item-label deployment-window-column-3" />
+            <uie:ProgressBar low-value="0" class="deployment-item-progress-bar deployment-window-column-4" />
+        </ui:VisualElement>
+    </dwc:Selectable>
+</ui:UXML>

@@ -1,0 +1,13 @@
+:root {
+    height: 100%;
+}
+
+.help-button {
+    padding-left: 9px;
+    padding-right: 10px;
+    border-right-width: 0;
+}
+
+.deployment-toolbar__content {
+    height: 100%;
+}
