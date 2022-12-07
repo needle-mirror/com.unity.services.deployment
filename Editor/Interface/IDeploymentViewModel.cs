@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Unity.Services.Deployment.Editor.Shared.Collections;
+using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 
 namespace Unity.Services.Deployment.Editor.Interface
 {

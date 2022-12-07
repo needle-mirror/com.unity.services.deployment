@@ -7,6 +7,12 @@ To access the deployment window:
 ## Toolbar
 The toolbar in the Deployment Window contains a set of features to help with deploying assets.
 
+### Selection
+The selection can be done in multiple ways
+1. Click on an item in the Deployment Window
+2. Click on the checkbox of an item.
+3. Click on the checkbox of a deployment definition to select all items under that deployment definition.
+
 ### Deploy Selected
 This button will deploy the selected assets to the chosen environment.
 
@@ -48,8 +54,13 @@ Selects the asset in the Project Window if it is an Unity asset
 Opens the asset in the appropriate editor.
 This might not be available to all items.
 
-### Asset Status
-Describes the status of an asset.
+### Deployment Status
+Describes the status of an asset with respect to the remote resource.
+It is displayed under the status column of the Deployment Window.
+
+### Asset States
+Describes the local states of an asset. An asset can contain multiple states.
+It is displayed under the asset name in the Deployment Window.
 
 ### Warning
 The warning icon appears to bring attention to an issue with the asset

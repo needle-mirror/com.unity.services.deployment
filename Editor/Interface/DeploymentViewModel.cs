@@ -5,7 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using Unity.Services.Deployment.Editor.Environments;
-using Unity.Services.Deployment.Editor.Shared.Collections;
+using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using Unity.Services.DeploymentApi.Editor;
 using Logger = Unity.Services.Deployment.Editor.Shared.Logging.Logger;
 
@@ -45,8 +45,13 @@ namespace Unity.Services.Deployment.Editor.Interface
                 return;
             }
 
+            var enumeratedItems = items.EnumerateOnce();
+            enumeratedItems.ForEach(item => item.IsBeingDeployed = true);
             var providerCommands = m_DeploymentProviders.Select(provider => new Tuple<DeploymentProvider, Command>(provider, provider.DeployCommand)).ToList();
-            await ExecuteCommandAsync(providerCommands, items.Cast<DeploymentItemViewModel>());
+            await ExecuteCommandAsync(providerCommands, enumeratedItems.Cast<DeploymentItemViewModel>()).ContinueWith(_ =>
+            {
+                enumeratedItems.ForEach(item => item.IsBeingDeployed = false);
+            });
         }
 
         void DeploymentProvidersOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

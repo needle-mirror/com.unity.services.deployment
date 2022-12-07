@@ -6,5 +6,6 @@ namespace Unity.Services.Deployment.Editor.Shared.Clients
     interface IGatewayTokenProvider
     {
         public Task<string> FetchGatewayToken();
+        public bool IsStaging();
     }
 }

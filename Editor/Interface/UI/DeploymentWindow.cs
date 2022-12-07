@@ -7,10 +7,11 @@ using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.DeploymentDefinitions;
 using Unity.Services.Deployment.Editor.Environments;
 using Unity.Services.Deployment.Editor.Environments.UI;
+using Unity.Services.Deployment.Editor.Interface.UI.Components;
+using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
 using Unity.Services.Deployment.Editor.Interface.UI.Views;
-using Unity.Services.Deployment.Editor.Shared.IO;
-using Unity.Services.Deployment.Editor.Shared.Threading;
-using Unity.Services.Deployment.Editor.Shared.Tracking;
+using Unity.Services.Deployment.Editor.Shared.Infrastructure.IO;
+using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.Deployment.Editor.State;
 using UnityEditor;
 using UnityEngine;
@@ -54,6 +55,8 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
         IDeploymentSettings m_DeploymentSettings;
         IEnvironmentFetcher m_EnvironmentFetcher;
         ICommandManager m_CommandManager;
+        IKeyboardShortcuts m_KeyboardShortcuts;
+        ISerializationManager m_SerializationManager;
         EditorValueTracker<string> m_ProjectIdTracker;
 
         VisualElement m_CurrentView;
@@ -72,7 +75,9 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             IDeploymentSettings deploymentSettings,
             IEnvironmentFetcher environmentFetcher,
             IDeploymentViewModel deploymentViewModel,
-            ICommandManager commandManager)
+            ICommandManager commandManager,
+            IKeyboardShortcuts keyboardShortcuts,
+            ISerializationManager serializationManager)
         {
             m_DeploymentWindowAnalytics = deploymentWindowAnalytics;
             m_DeploymentWindowStateProvider = deploymentWindowStateProvider;
@@ -81,6 +86,8 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             m_EnvironmentFetcher = environmentFetcher;
             m_DeploymentViewModel = deploymentViewModel;
             m_CommandManager = commandManager;
+            m_KeyboardShortcuts = keyboardShortcuts;
+            m_SerializationManager = serializationManager;
         }
 
         protected internal override void LoadGui()
@@ -129,7 +136,9 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             m_DeploymentView.Bind(m_DeploymentViewModel,
                 m_DeploymentWindowAnalytics,
                 m_DeploymentDefinitionService,
-                m_CommandManager);
+                m_CommandManager,
+                m_KeyboardShortcuts,
+                m_SerializationManager);
 
             m_DeploymentView.AddToClassList(k_HiddenClassName);
             m_NoConnectionView.AddToClassList(k_HiddenClassName);

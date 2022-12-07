@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using Unity.Services.Deployment.Editor.Shared.Collections;
+using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 
 namespace Unity.Services.Deployment.Editor.Commands
 {

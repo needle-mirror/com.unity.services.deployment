@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.Shared.Threading;
-using Unity.Services.Deployment.Editor.State;
 using UnityEditor;
 using UnityEngine;
 using DeploymentWindowUi = Unity.Services.Deployment.Editor.Interface.UI.DeploymentWindow;

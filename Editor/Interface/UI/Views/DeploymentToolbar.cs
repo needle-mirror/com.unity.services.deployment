@@ -2,12 +2,10 @@ using System.Collections.Generic;
 using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.Interface.UI.Components;
 using Unity.Services.Deployment.Editor.Interface.UI.Events;
-using Unity.Services.Deployment.Editor.Shared.Collections;
+using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
-
-using PackageManager = UnityEditor.PackageManager;
 
 namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 {
@@ -17,7 +15,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         internal const string deployAllButton = "DeployAllButton";
         internal const string deploySelectedButton = "DeploySelectedButton";
         internal const string helpButton = "HelpButton";
-        internal const string ActionNameDeployAllOnPlay = "Deploy All On Play";
+        internal const string ActionNameDeployAllOnPlay = "Deploy Selected On Play";
         internal const string ActionNameBlockPlaymodeOnFailure = "Block Playmode On Failure";
         const string k_ToolbarContentClass = "deployment-toolbar__content";
 
@@ -68,8 +66,11 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
         void OnOnSelectionChanged()
         {
-            var selectedItems = this.Query<Selectable>().Where(s => s.value).ToList();
-            this.Q<ToolbarButton>(deploySelectedButton).SetEnabled(m_DeployEnabled && selectedItems.Count > 0);
+            var checkedItems = this
+                .Query<CheckmarkToggle>()
+                .Where(ct => ct.value)
+                .ToList();
+            this.Q<ToolbarButton>(deploySelectedButton).SetEnabled(m_DeployEnabled && checkedItems.Count > 0);
         }
 
         IEnumerable<VisualElement> ContentChildren()

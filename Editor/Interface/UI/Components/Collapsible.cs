@@ -12,8 +12,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Components
         Toggle m_CollapseToggle;
         VisualElement m_Container;
 
-        public string containerClass { get; set; }
-
+        string ContainerClass { get; set; }
         public bool IsContentVisible => m_Container?.visible ?? false;
 
         public Collapsible()
@@ -24,9 +23,10 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Components
 
         void SetupElement(GeometryChangedEvent e)
         {
-            m_Container = this.Q(className: containerClass);
+            m_Container = this.Q(className: ContainerClass);
             m_CollapseToggle = this.Q<CollapseToggle>();
             m_CollapseToggle.RegisterCallback<ChangeEvent<bool>>(e => OnToggleValueChanged(e.newValue));
+            OnToggleValueChanged(m_CollapseToggle.value);
 
             UnregisterCallback<GeometryChangedEvent>(SetupElement);
         }
@@ -63,7 +63,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Components
             {
                 base.Init(element, bag, cc);
                 var collapsible = element as Collapsible;
-                collapsible.containerClass = m_ContainerName.GetValueFromBag(bag, cc);
+                collapsible.ContainerClass = m_ContainerName.GetValueFromBag(bag, cc);
             }
         }
 

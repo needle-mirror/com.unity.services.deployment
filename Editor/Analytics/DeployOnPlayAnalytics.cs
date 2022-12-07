@@ -31,7 +31,7 @@ namespace Unity.Services.Deployment.Editor.Analytics
 
         struct DeployOnPlayScope : IDisposable
         {
-            readonly IAnalyticsTimer m_Timer;
+            readonly AnalyticsTimer m_Timer;
             public DeployOnPlayScope(DeployOnPlayAnalytics parent)
             {
                 m_Timer = new AnalyticsTimer(parent.SendDeployOnPlayEvent);
@@ -39,7 +39,7 @@ namespace Unity.Services.Deployment.Editor.Analytics
 
             public void Dispose()
             {
-                m_Timer.End();
+                m_Timer.Dispose();
             }
         }
 

@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -9,6 +10,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Components
         const string k_CollapseUssClass = "collapse-toggle";
         const string k_UncollapseUssClass = "uncollapse-toggle";
 
+        public event Action ValueChanged;
         public CollapseToggle()
         {
             styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(k_StylePath));
@@ -18,13 +20,12 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Components
 
         void OnToggleValueChanged(bool newValue)
         {
-            if (newValue)
-            {
-                SetToggleClass(k_UncollapseUssClass);
-                return;
-            }
+            SetToggleClass(
+                newValue
+                ? k_UncollapseUssClass
+                : k_CollapseUssClass);
 
-            SetToggleClass(k_CollapseUssClass);
+            ValueChanged?.Invoke();
         }
 
         void SetToggleClass(string ussClass)

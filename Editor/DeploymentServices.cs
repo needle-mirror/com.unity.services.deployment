@@ -6,12 +6,17 @@ using Unity.Services.Deployment.Editor.DeploymentDefinitions;
 using Unity.Services.Deployment.Editor.Environments;
 using Unity.Services.Deployment.Editor.Environments.UI;
 using Unity.Services.Deployment.Editor.Interface;
+using Unity.Services.Deployment.Editor.Interface.UI.Components;
+using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
+using Unity.Services.Deployment.Editor.IO;
+using Unity.Services.Deployment.Editor.JsonUtils;
 using Unity.Services.Deployment.Editor.PlayMode;
-using Unity.Services.Deployment.Editor.Shared.Chrono;
+using Unity.Services.Deployment.Editor.Shared.Assets;
 using Unity.Services.Deployment.Editor.Shared.Clients;
 using Unity.Services.Deployment.Editor.Shared.DependencyInversion;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using Unity.Services.Deployment.Editor.State;
+using Unity.Services.Deployment.Editor.Tracking;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -59,16 +64,27 @@ namespace Unity.Services.Deployment.Editor
 
             collection.Register(Factories.Default<EnvironmentDropdown>);
             collection.Register(Factories.Default<IEnvironmentValidator, EnvironmentValidator>);
-            collection.Register(Factories.Default<IProjectIdProvider, ProjectIdProvider>);
             collection.RegisterSingleton(Factories.Default<IEnvironmentProvider, DeploymentSettings>);
 
             collection.Register(Factories.Default<IDeploymentViewModel, DeploymentViewModel>);
             collection.Register(_ => Deployments.Instance.DeploymentProviders);
+            collection.Register(_ => Deployments.Instance);
             collection.Register(Factories.Default<IDeploymentWindowStateProvider, DeploymentWindowStateProvider>);
+            collection.Register(Factories.Default<IDeploymentItemTracker, DeploymentItemTracker>);
             collection.Register(Factories.Default<INotifications, Notifications>);
 
             collection.RegisterSingleton(Factories.Default<ICommandManager, DeploymentCommandManager>);
             collection.Register(Factories.Default<SelectInProjectWindowCommand>);
+            collection.Register(Factories.Default<IKeyboardShortcuts, KeyboardShortcuts>);
+            collection.Register(Factories.Default<IKeyboardSelectionLogic, KeyboardSelectionLogic>);
+            collection.Register(Factories.Default<ISerializationManager, SerializationManager>);
+            collection.Register(Factories.Default<ISerializableComponentFetcher, UiTreeSerializableComponentFetcher>);
+            collection.Register(Factories.Default<IJsonConverter, NewtonsoftJsonConverter>);
+            collection.Register(Factories.Default<IDeployOnPlayItemRetriever, DeployOnPlayItemRetriever>);
+
+            collection.RegisterStartupSingleton(Factories.Default<ItemStatusTracker>);
+            collection.Register(Factories.Default<IFileTracker, FileTracker>);
+            collection.Register(Factories.Default<AssetPostprocessorProxy>);
         }
     }
 }

@@ -1,6 +1,6 @@
 using System;
-using Unity.Services.Deployment.Editor.Shared.Crypto;
 using UnityEditor;
+using Hashing = Unity.Services.Deployment.Editor.Shared.Crypto.Hash;
 
 namespace Unity.Services.Deployment.Editor.Analytics
 {
@@ -19,7 +19,7 @@ namespace Unity.Services.Deployment.Editor.Analytics
             AnalyticsUtils.RegisterEventDefault(k_EventNameContextMenuOpened, k_VersionContextMenuOpened);
             AnalyticsUtils.RegisterEventDefault(k_EventNameContextMenuSelect, k_VersionContextMenuSelect);
         }
-        
+
         public void SendDoubleClickEvent(string itemPath)
         {
             var result = EditorAnalytics.SendEventWithLimit(
@@ -58,7 +58,7 @@ namespace Unity.Services.Deployment.Editor.Analytics
             public ItemPathParams(string itemPath)
             {
                 var assetGuid = AssetDatabase.GUIDFromAssetPath(itemPath);
-                this.itemName = Hash.SHA1(assetGuid == k_NullGUID ? itemPath : assetGuid.ToString());
+                this.itemName = Hashing.SHA1(assetGuid == k_NullGUID ? itemPath : assetGuid.ToString());
             }
         }
     }

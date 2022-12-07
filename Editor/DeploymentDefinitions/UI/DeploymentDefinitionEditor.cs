@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Unity.Services.Deployment.Editor.Shared.Editing;
+using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;

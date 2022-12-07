@@ -9,20 +9,20 @@ namespace Unity.Services.Deployment.Editor.Environments
         readonly IEnvironmentProvider m_EnvironmentProvider;
         readonly IGatewayTokenProvider m_TokenProvider;
         readonly IEnvironmentFetcher m_EnvironmentFetcher;
-        readonly IProjectIdProvider m_ProjectIdProvider;
+        readonly IProjectInfo m_ProjectInfo;
 
-        public EnvironmentValidator(IProjectIdProvider projectIdProvider, IEnvironmentFetcher fetcher, IEnvironmentProvider environmentProvider, IGatewayTokenProvider tokenProvider)
+        public EnvironmentValidator(IProjectInfo projectInfo, IEnvironmentFetcher fetcher, IEnvironmentProvider environmentProvider, IGatewayTokenProvider tokenProvider)
         {
             m_EnvironmentProvider = environmentProvider;
             m_TokenProvider = tokenProvider;
             m_EnvironmentFetcher = fetcher;
-            m_ProjectIdProvider = projectIdProvider;
+            m_ProjectInfo = projectInfo;
         }
 
         public async Task<ValidationResult> ValidateEnvironmentAsync()
         {
             var result = new ValidationResult();
-            var projectId = m_ProjectIdProvider.Id;
+            var projectId = m_ProjectInfo.ProjectId;
             var gatewayToken = await m_TokenProvider.FetchGatewayToken();
             var environmentId = m_EnvironmentProvider.Current;
 

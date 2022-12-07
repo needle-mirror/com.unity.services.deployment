@@ -8,7 +8,8 @@ using Unity.Services.Deployment.Editor.Commands;
 using Unity.Services.Deployment.Editor.DeploymentDefinitions;
 using Unity.Services.Deployment.Editor.Interface.UI.Components;
 using Unity.Services.Deployment.Editor.Interface.UI.Events;
-using Unity.Services.Deployment.Editor.Shared.Collections;
+using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
+using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEngine.UIElements;
@@ -27,8 +28,16 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         IDeploymentWindowAnalytics m_DeploymentWindowAnalytics;
         IDeploymentDefinitionService m_DeploymentDefinitionService;
         ICommandManager m_CommandManager;
+        IKeyboardShortcuts m_KeyboardShortcuts;
+        ISerializationManager m_SerializationManager;
         TreeViewElement m_TreeViewElement;
         StatusPanel m_StatusPanel;
+
+        public enum ItemRetrieval
+        {
+            Selected,
+            Checked
+        }
 
         protected override string UxmlName => "DeploymentWindow_Deployment";
 
@@ -45,12 +54,16 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             IDeploymentViewModel deploymentViewModel,
             IDeploymentWindowAnalytics deploymentWindowAnalytics,
             IDeploymentDefinitionService deploymentDefinitionService,
-            ICommandManager commandManager)
+            ICommandManager commandManager,
+            IKeyboardShortcuts keyboardShortcuts,
+            ISerializationManager serializationManager)
         {
             m_DeploymentViewModel = deploymentViewModel;
             m_DeploymentWindowAnalytics = deploymentWindowAnalytics;
             m_DeploymentDefinitionService = deploymentDefinitionService;
             m_CommandManager = commandManager;
+            m_KeyboardShortcuts = keyboardShortcuts;
+            m_SerializationManager = serializationManager;
             BindGUI();
         }
 
@@ -58,11 +71,14 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         {
             RegisterCallback<DeployAllClicked>(_ => DeployAllButtonOnClicked());
             RegisterCallback<DeploySelectedClicked>(_ => DeploySelectedButtonOnClicked());
+            RegisterCallback<AttachToPanelEvent>(_ => OnAttachedToPanel());
+            RegisterCallback<DetachFromPanelEvent>(_ => OnDetachedFromPanel());
 
             var statusLabel = this.Query<Label>(VisualElementNames.StatusLabel);
             m_StatusPanel = new StatusPanel(statusLabel);
 
             m_TreeViewElement = this.Query<TreeViewElement>().First();
+            m_TreeViewElement.BindGUI(m_KeyboardShortcuts);
             m_TreeViewElement.OnSelectionChanged += OnDeploymentItemSelectionChanged;
             OnDeploymentItemSelectionChanged();
 
@@ -72,11 +88,14 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
             m_DeploymentItemBindings.Source = m_DeploymentViewModel.DeploymentItems;
             m_DeploymentDefinitionBindings.Source = m_DeploymentDefinitionService.DeploymentDefinitions.AsReadonly();
+
+            m_SerializationManager.Bind(this);
+            m_SerializationManager.ApplySerialization();
         }
 
         void OnDeploymentItemSelectionChanged()
         {
-            var selectedItems = GetDeploymentViewsForDeployment()
+            var selectedItems = GetDeploymentViewsForDeployment(ItemRetrieval.Selected)
                 .ToList();
             var lastSelected = selectedItems.LastOrDefault();
             if (lastSelected == null)
@@ -87,15 +106,26 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
         async void DeploySelectedButtonOnClicked()
         {
-            var selectedDeploymentItems = GetDeploymentViewsForDeployment()
+            var checkedDeploymentItems = GetDeploymentViewsForDeployment(ItemRetrieval.Checked)
                 .Select(vm => vm.Item)
                 .ToList();
-            await m_DeploymentViewModel.DeployItemsAsync(selectedDeploymentItems);
+            await m_DeploymentViewModel.DeployItemsAsync(checkedDeploymentItems);
         }
 
         async void DeployAllButtonOnClicked()
         {
             await m_DeploymentViewModel.DeployItemsAsync(m_DeploymentViewModel.DeploymentItems);
+        }
+
+        void OnAttachedToPanel()
+        {
+            m_SerializationManager.Bind(this);
+            m_SerializationManager.ApplySerialization();
+        }
+
+        void OnDetachedFromPanel()
+        {
+            m_SerializationManager.Unbind();
         }
 
         List<DeploymentDefinitionView> GetDeploymentDefinitionViews()
@@ -153,7 +183,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
         internal async void OnItemDeployedFromContextMenuClicked(DeploymentElementViewBase itemView)
         {
-            var selectedModels = GetDeploymentViewsForDeployment()
+            var selectedModels = GetDeploymentViewsForDeployment(ItemRetrieval.Selected)
                 .Select(di => di.Item)
                 .ToList();
             await m_DeploymentViewModel.DeployItemsAsync(selectedModels);
@@ -175,9 +205,9 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             }
         }
 
-        IEnumerable<DeploymentItemView> GetDeploymentViewsForDeployment()
+        IEnumerable<DeploymentItemView> GetDeploymentViewsForDeployment(ItemRetrieval itemRetrieval)
         {
-            return GetDeploymentDefinitionViews().SelectMany(item => item.GetDeploymentViewsForDeployment());
+            return GetDeploymentDefinitionViews().SelectMany(item => item.GetDeploymentViewsForDeployment(itemRetrieval));
         }
 
         void ObservableCollectionOnCollectionChanged<T>(IReadOnlyCollection<T> collection, NotifyCollectionChangedEventArgs e)
@@ -203,6 +233,8 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
                 AddNewItems(e.NewItems);
                 RemoveOldItems(e.OldItems);
             }
+
+            m_SerializationManager.ApplySerialization();
         }
 
         void RemoveOldItems(IEnumerable oldItems)
@@ -336,6 +368,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
                 var view = deploymentDefinitionView.GetDeploymentItemViews().SingleOrDefault(v => v.Item == item);
                 if (view != null)
                 {
+                    view.Unbind();
                     deploymentDefinitionView.RemoveChild(view);
                     if (view.Selected)
                     {

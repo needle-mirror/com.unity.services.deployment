@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Unity.Services.Deployment.Editor.Analytics;
 using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.Environments;
-using Unity.Services.Deployment.Editor.Shared.Collections;
 using Unity.Services.Deployment.Editor.Shared.Logging;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using Unity.Services.DeploymentApi.Editor;
@@ -23,19 +22,22 @@ namespace Unity.Services.Deployment.Editor.PlayMode
         readonly IDeploymentSettings m_Settings;
         readonly IDeployOnPlayAnalytics m_DeployOnPlayAnalytics;
         readonly INotifications m_Notifications;
+        readonly IDeployOnPlayItemRetriever m_DeployOnPlayItemRetriever;
 
         public DeployOnPlay(IPlayModeInterrupt playModeInterrupt,
                             IEnvironmentValidator environmentValidator,
                             ObservableCollection<DeploymentProvider> providers,
                             IDeploymentSettings settings,
                             IDeployOnPlayAnalytics deployOnPlayAnalytics,
-                            INotifications notifications)
+                            INotifications notifications,
+                            IDeployOnPlayItemRetriever deployOnPlayItemRetriever)
         {
             m_Providers = providers;
             m_Settings = settings;
             m_DeployOnPlayAnalytics = deployOnPlayAnalytics;
             m_EnvironmentValidator = environmentValidator;
             m_Notifications = notifications;
+            m_DeployOnPlayItemRetriever = deployOnPlayItemRetriever;
             playModeInterrupt.OnPlay(ValidateEnvironment, DeployAllAsync);
         }
 
@@ -60,12 +62,12 @@ namespace Unity.Services.Deployment.Editor.PlayMode
 
             using (m_DeployOnPlayAnalytics.GetEventScope())
             {
-                var itemsToDeployCount = m_Providers.Select(p => p.DeploymentItems.Count).Sum();
+                var itemsToDeploy = m_DeployOnPlayItemRetriever.GetItemsForDeployOnPlay().ToHashSet();
 
                 var tasks = new List<Task>();
                 using var progressBar = m_Notifications.ProgressBar(k_ProgressBarTitle,
                     k_ProgressBarInfo,
-                    itemsToDeployCount);
+                    itemsToDeploy.Count);
 
                 foreach (var provider in m_Providers)
                 {
@@ -78,7 +80,8 @@ namespace Unity.Services.Deployment.Editor.PlayMode
                         continue;
                     }
 
-                    tasks.Add(DeployItemsAsync(provider.DeployCommand, provider.DeploymentItems, progressBar));
+                    var providerItemsToDeploy = provider.DeploymentItems.Where(item => itemsToDeploy.Contains(item));
+                    tasks.Add(DeployItemsAsync(provider.DeployCommand, providerItemsToDeploy, progressBar));
                 }
 
                 await Task.WhenAll(tasks);
@@ -89,12 +92,13 @@ namespace Unity.Services.Deployment.Editor.PlayMode
         {
             void itemOnPropertyChanged(object sender, PropertyChangedEventArgs e) => ItemOnPropertyChanged(sender, e, progressBar);
 
-            items.ForEach(item =>
+            var itemsList = items.ToList();
+            itemsList.ForEach(item =>
                 item.PropertyChanged += itemOnPropertyChanged);
 
-            await deployCommand.ExecuteAsync(items);
+            await deployCommand.ExecuteAsync(itemsList);
 
-            items.ForEach(item => item.PropertyChanged -= itemOnPropertyChanged);
+            itemsList.ForEach(item => item.PropertyChanged -= itemOnPropertyChanged);
         }
 
         static void ItemOnPropertyChanged(object sender, PropertyChangedEventArgs e, IProgressBar progressBar)

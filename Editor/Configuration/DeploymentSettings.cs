@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Unity.Services.Deployment.Editor.Shared.Tracking;
+using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEditor;
 

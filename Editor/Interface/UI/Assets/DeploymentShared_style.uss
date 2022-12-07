@@ -1,7 +1,9 @@
 .deployment-window-column-1 {
-    width: 40%;
-    flex: 1 1 40%;
-    align-items: center;
+    width: 45%;
+    flex: 1 1 45%;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 8px;
 }
 
 .deployment-window-column-2 {
@@ -10,13 +12,9 @@
 }
 
 .deployment-window-column-3 {
-    width: 16%;
-    flex: 1 1 16%;
-}
-
-.deployment-window-column-4 {
-    width: 24%;
-    flex: 1 1 24%;
+    width: 35%;
+    flex: 1 1 35%;
+    padding-right: 8px;
 }
 
 .center-content {
@@ -64,4 +62,8 @@ ToolbarMenu.menu {
     border-color: var(--unity-colors-link-text);
     padding: 0;
     border-radius: 0;
+}
+
+.status-label{
+    white-space: normal;
 }

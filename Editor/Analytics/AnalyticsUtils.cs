@@ -18,13 +18,13 @@ namespace Unity.Services.Deployment.Editor.Analytics
                     AnalyticsConstants.k_VendorKey,
                     version);
 
-                Logger.LogVerbose($"Analytics: {eventName}.v{version} registered with result {result}");
+                Logger.LogVerbose($"Registered Analytics: {eventName}.v{version}. Result: {result}");
             });
         }
 
         public static void LogVerbose(string eventName, int version, AnalyticsResult result)
         {
-            Logger.LogVerbose($"Analytics Event: {eventName}.v{version}. Result: {result}");
+            Logger.LogVerbose($"Sent Analytics Event: {eventName}.v{version}. Result: {result}");
         }
     }
 }

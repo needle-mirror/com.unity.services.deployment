@@ -8,6 +8,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
     class DeploymentElementViewBase : VisualElement
     {
         public bool Selected => this.Q<Selectable>().value;
+        public bool Checked => this.Q<CheckmarkToggle>().value;
         public object Model { get; protected set; }
         public event Action<DeploymentElementViewBase, ContextualMenuPopulateEvent> ContextMenuRequested;
         public event Action<DeploymentElementViewBase> DoubleClickDeployed;

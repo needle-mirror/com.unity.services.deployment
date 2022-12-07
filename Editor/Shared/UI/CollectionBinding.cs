@@ -1,7 +1,7 @@
 // WARNING: Auto generated code. Modifications will be lost!
 using System;
 using System.Collections.Specialized;
-using Unity.Services.Deployment.Editor.Shared.Collections;
+using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using UnityEngine.UIElements;
 
 namespace Unity.Services.Deployment.Editor.Shared.UI

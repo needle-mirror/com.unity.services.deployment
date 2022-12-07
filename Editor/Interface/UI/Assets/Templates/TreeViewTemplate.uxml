@@ -9,10 +9,10 @@
     editor-extension-mode="False">
     <Style src="project://database/Packages/com.unity.services.deployment/Editor/Interface/UI/Assets/DeploymentShared_style.uss" />
     <ui:ScrollView class="tree-view-scroll-view">
-        <dwc:ArrowShortcutsContainer name="ArrowShortcuts">
+        <dwc:KeyboardShortcutsContainer name="KeyboardShortcuts">
             <dwc:MultiSelect name="MultiSelectContainer" class="multi-select">
                 <ui:VisualElement content-container="true"/>
             </dwc:MultiSelect>
-        </dwc:ArrowShortcutsContainer>
+        </dwc:KeyboardShortcutsContainer>
     </ui:ScrollView>
 </ui:UXML>

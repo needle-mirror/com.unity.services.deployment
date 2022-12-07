@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Unity.Services.Deployment.Editor.DeploymentDefinitions;
+using Unity.Services.Deployment.Editor.Interface.UI.Components;
 using Unity.Services.Deployment.Editor.Interface.UI.Events;
+using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using UnityEngine.UIElements;
 
 namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 {
-    class DeploymentDefinitionView : DeploymentElementViewBase
+    class DeploymentDefinitionView : DeploymentElementViewBase, ISerializableComponent
     {
         const string k_TemplatePath = "Packages/com.unity.services.deployment/Editor/Interface/UI/Assets/Templates/DeploymentDefinitionTemplate.uxml";
 
@@ -17,6 +20,14 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         readonly ModelBinding<DeploymentDefinition> m_ItemBindings;
         bool m_IsDefault;
         string m_Path;
+
+        CollapseToggle m_CollapseToggle;
+        CheckmarkToggle m_CheckmarkToggle;
+
+        public string SerializationKey => DeploymentDefinition.Path;
+        public object SerializationValue => new SerializationContainer(m_CheckmarkToggle.value, m_CollapseToggle.value);
+
+        public event Action ValueChanged;
 
         public DeploymentDefinitionView()
             : base(k_TemplatePath)
@@ -43,7 +54,21 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             base.Model = definition;
             m_ItemBindings.Source = definition;
 
+            m_CollapseToggle = this.Q<CollapseToggle>();
+            m_CollapseToggle.ValueChanged += OnSerializableValueChanged;
+            m_CheckmarkToggle = this.Q<CheckmarkToggle>();
+            m_CheckmarkToggle.ValueChanged += OnSerializableValueChanged;
+
             RefreshVisibility();
+        }
+
+        public void ApplySerialization(object serializationValue)
+        {
+            if (serializationValue is SerializationContainer sc)
+            {
+                m_CheckmarkToggle.value = sc.Checkmark;
+                m_CollapseToggle.value = sc.Collapse;
+            }
         }
 
         public void AddChild(DeploymentItemView itemView)
@@ -71,20 +96,34 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             return this.Query<DeploymentItemView>().ToList();
         }
 
-        public IEnumerable<DeploymentItemView> GetDeploymentViewsForDeployment()
+        public IEnumerable<DeploymentItemView> GetDeploymentViewsForDeployment(DeploymentView.ItemRetrieval itemRetrieval)
         {
-            if (Selected)
+            if (itemRetrieval == DeploymentView.ItemRetrieval.Selected && Selected
+                || itemRetrieval == DeploymentView.ItemRetrieval.Checked && Checked)
             {
                 return GetDeploymentItemViews();
             }
 
-            return GetDeploymentItemViews().Where(itemView => itemView.Selected);
+            return itemRetrieval == DeploymentView.ItemRetrieval.Checked
+                ? GetCheckedDeploymentItemViews()
+                : GetSelectedDeploymentItemViews();
         }
 
         public IEnumerable<DeploymentItemView> GetSelectedDeploymentItemViews()
         {
             return GetDeploymentItemViews()
                 .Where(i => i.Selected);
+        }
+
+        public IEnumerable<DeploymentItemView> GetCheckedDeploymentItemViews()
+        {
+            return GetDeploymentItemViews()
+                .Where(i => i.Checked);
+        }
+
+        void OnSerializableValueChanged()
+        {
+            ValueChanged?.Invoke();
         }
 
         void RefreshVisibility()
@@ -103,6 +142,19 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         {
             public const string DefinitionName = "DeploymentSetName";
             public const string ContainerElement = "DeploymentSetContainer";
+        }
+
+        internal class SerializationContainer
+        {
+            [JsonProperty("checkmark")]
+            public bool Checkmark;
+            [JsonProperty("collapse")]
+            public bool Collapse;
+            public SerializationContainer(bool checkmark, bool collapse)
+            {
+                Checkmark = checkmark;
+                Collapse = collapse;
+            }
         }
 
         new class UxmlFactory : UxmlFactory<DeploymentDefinitionView> {}

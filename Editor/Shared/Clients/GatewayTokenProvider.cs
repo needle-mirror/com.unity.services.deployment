@@ -1,7 +1,6 @@
 // WARNING: Auto generated code. Modifications will be lost!
 using System;
 using System.Threading.Tasks;
-using Unity.Services.Deployment.Editor.Shared.Chrono;
 
 namespace Unity.Services.Deployment.Editor.Shared.Clients
 {
@@ -40,6 +39,11 @@ namespace Unity.Services.Deployment.Editor.Shared.Clients
             }
 
             return m_GatewayToken;
+        }
+
+        public bool IsStaging()
+        {
+            return CloudEnvironmentConfigProvider.IsStaging();
         }
 
         static DateTime GetNextRefreshTime(string gatewayToken)

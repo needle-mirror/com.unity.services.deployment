@@ -8,7 +8,7 @@ namespace Unity.Services.Deployment.Editor.Shared.Assets
     {
         static EventHandler<PostProcessEventArgs> s_AllAssetsPostprocessed;
 
-        public event EventHandler<PostProcessEventArgs> AllAssetsPostprocessed
+        public virtual event EventHandler<PostProcessEventArgs> AllAssetsPostprocessed
         {
             add => s_AllAssetsPostprocessed += value;
             remove => s_AllAssetsPostprocessed -= value;

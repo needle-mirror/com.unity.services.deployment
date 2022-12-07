@@ -1,10 +1,10 @@
-// WARNING: Auto generated code by Starbuck2. Modifications will be lost!
+// WARNING: Auto generated code. Modifications will be lost!
 using System;
 using System.Diagnostics;
 
 namespace Unity.Services.Deployment.Editor.Shared.Analytics
 {
-    class AnalyticsTimer : IAnalyticsTimer
+    class AnalyticsTimer : IDisposable
     {
         readonly Stopwatch m_Stopwatch;
         readonly Action<int> m_DurationHandler;
@@ -16,7 +16,7 @@ namespace Unity.Services.Deployment.Editor.Shared.Analytics
             m_Stopwatch.Start();
         }
 
-        public void End()
+        public void Dispose()
         {
             m_Stopwatch.Stop();
             m_DurationHandler((int)m_Stopwatch.ElapsedMilliseconds);

@@ -1,4 +1,4 @@
-using Unity.Services.Deployment.Editor.Shared.IO;
+using Unity.Services.Deployment.Editor.Shared.Infrastructure.IO;
 using UnityEditor;
 using UnityEngine.UIElements;
 

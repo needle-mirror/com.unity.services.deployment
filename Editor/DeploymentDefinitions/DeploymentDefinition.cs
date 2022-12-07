@@ -5,9 +5,9 @@ using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Unity.Services.Deployment.Editor.Shared.Assets;
-using Unity.Services.Deployment.Editor.Shared.Editing;
-using Unity.Services.Deployment.Editor.Shared.Threading;
+using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using UnityEngine;
+using Sync = Unity.Services.Deployment.Editor.Shared.Threading.Sync;
 
 namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
 {

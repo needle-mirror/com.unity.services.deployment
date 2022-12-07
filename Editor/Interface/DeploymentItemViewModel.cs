@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Unity.Services.DeploymentApi.Editor;
@@ -6,6 +7,8 @@ namespace Unity.Services.Deployment.Editor.Interface
 {
     class DeploymentItemViewModel : IDeploymentItemViewModel
     {
+        bool m_IsBeingDeployed;
+
         public event PropertyChangedEventHandler PropertyChanged
         {
             add => OriginalItem.PropertyChanged += value;
@@ -21,6 +24,23 @@ namespace Unity.Services.Deployment.Editor.Interface
         }
 
         public ObservableCollection<AssetState> States => OriginalItem.States;
+
+        public event Action<bool> DeploymentStateChanged;
+
+        public bool IsBeingDeployed
+        {
+            get => m_IsBeingDeployed;
+            set
+            {
+                if (m_IsBeingDeployed == value)
+                {
+                    return;
+                }
+
+                m_IsBeingDeployed = value;
+                DeploymentStateChanged?.Invoke(m_IsBeingDeployed);
+            }
+        }
         public string Service { get; }
         public IDeploymentItem OriginalItem { get; }
 

@@ -1,22 +1,22 @@
 {
   "name": "com.unity.services.deployment",
   "displayName": "Deployment",
-  "version": "1.0.0-pre.5",
+  "version": "1.0.0-pre.7",
   "unity": "2021.3",
   "description": "This package contains the code to show the Deployment Window and its features.",
   "dependencies": {
-    "com.unity.services.deployment.api": "1.0.0-pre.3",
+    "com.unity.services.deployment.api": "1.0.0-pre.5",
     "com.unity.services.core": "1.4.0"
   },
   "relatedPackages": {
-    "com.unity.services.deployment.tests": "1.0.0-pre.5"
+    "com.unity.services.deployment.tests": "1.0.0-pre.7"
   },
   "upmCi": {
-    "footprint": "95a1c5062462b32354e8bb9b4287add7362794a3"
+    "footprint": "f68e99251855c13fb784663211c380728229d667"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "1d95d9d58d9bde7e524d62bfc433a16d176ea03c"
+    "revision": "8001bbc398bf9c16043736d6cff2570150ec14f5"
   }
 }

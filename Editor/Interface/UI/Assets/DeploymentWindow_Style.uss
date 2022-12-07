@@ -13,7 +13,7 @@ ToolbarSearchField.deployment-window-search-bar {
 .table-header__container {
     display: flex;
     flex-direction: row;
-    padding: 3px 8px;
+    padding: 3px 0px;
     background-color: var(--unity-colors-toolbar-background);
     border-bottom-color: var(--unity-colors-toolbar-border);
     border-bottom-width: 1px;
