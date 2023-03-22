@@ -1,17 +1,17 @@
 # Environments
-Environments are logical partitions for Unity Game Services that contain data associated with your project. 
+
+Environments are logical partitions for Unity Gaming Services that contain data associated with your project.
 Examples can include game code using Cloud Code, or game configurations using Remote Config.
 
 All users are provided with a default environment, the `production` environment.
 
-For more in depth docs for environments, click [here](https://docs.unity.com/ugs-overview/unity-environments.htm).
+> [!NOTE]
+> You can't delete the default environment.
 
-## Creating an Environment
-In order to create a new environment, you will need to visit the [unity dashboard](https://dashboard.unity3d.com).
-Navigate to `Projects` on the sidebar, select a project in the dropdown at the top, and then click `Environments`.
+For more information, including how to create an environment, refer to [Unity Environments](https://docs.unity.com/ugs-overview/en/manual/service-environments).
 
-This page will allow you to create and delete environments. Please note that the default environment cannot be deleted.
+## Select an environment
+To select which environment to use for deploying your assets:
 
-## Selecting an Environment
-With this package installed, navigate to `Project Settings > Services > Deployment`. 
-This window will allow you to select which environment you would like to use for deploying Cloud Code scripts. 
+1. In the Unity Editor navigate to **Project Settings** > **Services** > **Deployment**.
+1. In the **Editor Environment** field, select the environment.

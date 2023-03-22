@@ -54,18 +54,12 @@ namespace Unity.Services.Deployment.Editor.Environments
             try
             {
                 var env = await m_EnvironmentFetcher.FetchEnvironment(environmentId);
-
-                if (string.IsNullOrEmpty(env.Id))
-                {
-                    return false;
-                }
+                return env.HasValue;
             }
             catch
             {
                 return false;
             }
-
-            return true;
         }
     }
 }

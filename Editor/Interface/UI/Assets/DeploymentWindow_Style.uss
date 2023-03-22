@@ -29,7 +29,6 @@ ToolbarSearchField.deployment-window-search-bar {
 
 .scroll-view {
     min-height: 40px;
-    max-height: 80px;
     margin-top: 6px;
     padding: 2px 4px;
 }

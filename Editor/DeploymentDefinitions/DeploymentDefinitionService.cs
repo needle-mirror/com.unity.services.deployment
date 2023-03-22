@@ -1,6 +1,5 @@
 using System;
 using System.Collections.ObjectModel;
-using Unity.Services.Deployment.Editor.Shared.Assets;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -13,8 +12,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
 
         public DeploymentDefinition DefaultDefinition { get; }
         public ObservableCollection<DeploymentDefinition> DeploymentDefinitions => m_DeploymentDefinitions;
-        readonly ObservableAssets<DeploymentDefinition> m_DeploymentDefinitions = new ObservableAssets<DeploymentDefinition>();
-
+        readonly DeploymentDefinitionCollection m_DeploymentDefinitions = new DeploymentDefinitionCollection();
 
         public DeploymentDefinitionService()
         {

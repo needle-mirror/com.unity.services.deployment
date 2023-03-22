@@ -1,6 +1,4 @@
-using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Unity.Services.Deployment.Editor.Analytics;
 using Unity.Services.Deployment.Editor.Commands;
 using Unity.Services.Deployment.Editor.Configuration;
@@ -11,7 +9,6 @@ using Unity.Services.Deployment.Editor.Interface.UI.Components;
 using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
 using Unity.Services.Deployment.Editor.Interface.UI.Views;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.IO;
-using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.Deployment.Editor.State;
 using UnityEditor;
 using UnityEngine;
@@ -43,21 +40,17 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
         protected NoPackagesInstalledView m_NoPackagesInstalledView;
         protected VisualElement m_EmptyListState;
         DeploymentToolbar m_DeploymentToolbar;
-
         EnvironmentView m_EnvironmentView;
-        [NonSerialized]
-        bool m_EnvironmentViewInitialized;
 
         IDeploymentViewModel m_DeploymentViewModel;
         IDeploymentWindowAnalytics m_DeploymentWindowAnalytics;
         IDeploymentWindowStateProvider m_DeploymentWindowStateProvider;
         IDeploymentDefinitionService m_DeploymentDefinitionService;
         IDeploymentSettings m_DeploymentSettings;
-        IEnvironmentFetcher m_EnvironmentFetcher;
+        IEnvironmentService m_EnvironmentService;
         ICommandManager m_CommandManager;
         IKeyboardShortcuts m_KeyboardShortcuts;
         ISerializationManager m_SerializationManager;
-        EditorValueTracker<string> m_ProjectIdTracker;
 
         VisualElement m_CurrentView;
 
@@ -73,7 +66,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             IDeploymentWindowStateProvider deploymentWindowStateProvider,
             IDeploymentDefinitionService deploymentDefinitionService,
             IDeploymentSettings deploymentSettings,
-            IEnvironmentFetcher environmentFetcher,
+            IEnvironmentService environmentService,
             IDeploymentViewModel deploymentViewModel,
             ICommandManager commandManager,
             IKeyboardShortcuts keyboardShortcuts,
@@ -83,7 +76,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             m_DeploymentWindowStateProvider = deploymentWindowStateProvider;
             m_DeploymentDefinitionService = deploymentDefinitionService;
             m_DeploymentSettings = deploymentSettings;
-            m_EnvironmentFetcher = environmentFetcher;
+            m_EnvironmentService = environmentService;
             m_DeploymentViewModel = deploymentViewModel;
             m_CommandManager = commandManager;
             m_KeyboardShortcuts = keyboardShortcuts;
@@ -106,17 +99,6 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             AddThemedStyleSheet();
 
             InitializeViews(root);
-
-            m_ProjectIdTracker = new EditorValueTracker<string>(() => CloudProjectSettings.projectId);
-            m_ProjectIdTracker.ValueChanged += async(_, _) =>
-            {
-                if (string.IsNullOrEmpty(CloudProjectSettings.projectId))
-                {
-                    return;
-                }
-
-                await BindEnvironments();
-            };
         }
 
         void InitializeViews(VisualElement root)
@@ -133,6 +115,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             m_DeploymentToolbar = root.Q<DeploymentToolbar>();
 
             m_DeploymentToolbar.Bind(m_DeploymentSettings);
+            m_EnvironmentView.Bind(m_EnvironmentService);
             m_DeploymentView.Bind(m_DeploymentViewModel,
                 m_DeploymentWindowAnalytics,
                 m_DeploymentDefinitionService,
@@ -149,7 +132,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             m_EmptyListState.AddToClassList(k_HiddenClassName);
         }
 
-        async void OnGUI()
+        void OnGUI()
         {
             if (!m_Initialized)
             {
@@ -157,44 +140,6 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             }
 
             CheckStateAndSetView();
-
-            await SetupEnvironmentView();
-        }
-
-        Task SetupEnvironmentView()
-        {
-            if (m_EnvironmentFetcher == null
-                || m_EnvironmentViewInitialized
-                || !m_DeploymentWindowStateProvider.IsInternetConnected()
-                || !m_DeploymentWindowStateProvider.IsProjectLinked())
-            {
-                return Task.CompletedTask;
-            }
-
-            m_EnvironmentView.RequestRequery += UpdateEnvironments;
-            m_EnvironmentView.RegisterCallback<AttachToPanelEvent>(_ =>
-            {
-                m_EnvironmentView.RequestRequery += UpdateEnvironments;
-            });
-            m_EnvironmentViewInitialized = true;
-
-            return BindEnvironments();
-        }
-
-        async void UpdateEnvironments()
-        {
-            await Sync.SafeAsync(
-                m_EnvironmentFetcher.FetchEnvironments,
-                task => m_EnvironmentView.UpdateEnvironments(task.Result)
-            );
-        }
-
-        Task BindEnvironments()
-        {
-            return Sync.SafeAsync(
-                m_EnvironmentFetcher.FetchEnvironments,
-                task => m_EnvironmentView.Bind(m_DeploymentSettings, task.Result)
-            );
         }
 
         void CheckStateAndSetView()
@@ -279,11 +224,6 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             }
 
             SetView(m_DeploymentView);
-        }
-
-        void OnDestroy()
-        {
-            m_ProjectIdTracker.Dispose();
         }
 
         internal static class StyleSheets

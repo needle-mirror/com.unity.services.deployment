@@ -1,40 +1,32 @@
 ﻿# Deployment Definitions
+
 Deployment Definitions are analogous to assembly definitions,
 but associated with deployable assets.
 
 They allow you to group a set of deployable assets or code
-into a logical grouping.
+into a logical grouping and associate settings with them.
+You can use this grouping for easier deployment in the Deployment window.
 
-This grouping can be used for easier deployment later
-in the Deployment Window.
+By default, all assets are assigned to the `Default` Deployment Definition.
 
-By default, all assets will be assigned to a `Default`
-Deployment Definition.
+Each folder can have only one Deployment Definition. However, subfolders can also contain other Deployment Definitions.
+All deployable assets inside a folder are assigned to the Deployment Definition in the folder.
+If a sub-folder doesn't contain a Deployment Definition, any deployable assets are assigned to the Deployment Definition in the parent folder.
 
-## Creating a Deployment Definition
+## Create Deployment Definitions
 
-A Deployment Definition can be created in any folder by right
-clicking on the Project Window it then clicking `Create > Deployment Defintion`.
+To create a Deployment Definition in a folder, right-click on the Project window, then select **Create** > **Deployment Defintion**.
 
-There can only be one Deployment Definition per folder, similar
-to assembly definitions. 
+## Modify Deployment Definitions
 
-All deployable assets inside that folder and sub-folders will be
-assigned to that Deployment Definition.
+You can modify Deployment Definitions in the **Inspector**. To open the Deployment Definition in the **Inspector**, select the Deployment Definition in the **Project** window. You can also open it in your preferred IDE from the **Project** window (right-click > **Open**).
 
-A Deployment Definition can be modified in the `Inspector` by selecting
-it from the `Project Window`. 
+To locate a Deployment Definition in the **Project** window, right-click it in the [**Deployment window**](./deployment_window.md) and choose **Select in Project window** in the context menu.
 
-Additionally, it can be located in the `Project Window` by right clicking
-on it in the [Deployment Window](./deployment_window.md) 
-and choosing `Select in Project Window` in the context menu.
+## Deploy Deployment Definitions
 
-You can also chose to open it in your preferred IDE from the `Project Window`.
+The [Deployment window](./deployment_window.md) displays Deployment Definitions and all their
+associated assets.
 
-## Deploying a Deployment Definition
-
-Deployment Definitions will show up in the [Deployment Window](./deployment_window.md) with all
-associated assets under its hierarchy.
-
-A Deployment Definition can be deployed by selecting and clicking Deploy,
-or by right-clicking and selecting the `Deploy` context menu item.
+To deploy a Deployment Definition select it and click **Deploy Selected**,
+or right-click and select the **Deploy** context menu item.

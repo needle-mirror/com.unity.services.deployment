@@ -12,6 +12,7 @@ using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using Unity.Services.DeploymentApi.Editor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Unity.Services.Deployment.Editor.Interface.UI.Views
@@ -84,13 +85,18 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
             TryAddDeploymentDefinition(m_DeploymentDefinitionService.DefaultDefinition);
 
-            RegisterCallback<RebuildTreeEvent>(_ => RebuildTree());
+            RegisterCallback<RebuildTreeEvent>(RebuildTreeHandler);
 
             m_DeploymentItemBindings.Source = m_DeploymentViewModel.DeploymentItems;
             m_DeploymentDefinitionBindings.Source = m_DeploymentDefinitionService.DeploymentDefinitions.AsReadonly();
 
             m_SerializationManager.Bind(this);
             m_SerializationManager.ApplySerialization();
+        }
+
+        void RebuildTreeHandler(RebuildTreeEvent e)
+        {
+            RebuildTree();
         }
 
         void OnDeploymentItemSelectionChanged()
@@ -230,11 +236,14 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             }
             else
             {
-                AddNewItems(e.NewItems);
                 RemoveOldItems(e.OldItems);
+                AddNewItems(e.NewItems);
             }
 
-            m_SerializationManager.ApplySerialization();
+            if (e.NewItems != null && e.NewItems.Count > 0)
+            {
+                m_SerializationManager.ApplySerialization();
+            }
         }
 
         void RemoveOldItems(IEnumerable oldItems)
@@ -268,9 +277,10 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
                 else if (newItem is DeploymentDefinition definition)
                 {
                     TryAddDeploymentDefinition(definition);
-                    RebuildTree();
                 }
             }
+
+            RebuildTree();
         }
 
         DeploymentDefinitionView GetViewFromModel(DeploymentDefinition definition)
@@ -287,19 +297,23 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
         void TryAddDeploymentDefinition(DeploymentDefinition definition)
         {
-            if (GetDeploymentDefinitionViews().All(x => x.DeploymentDefinition != definition))
+            var ddefViews = GetDeploymentDefinitionViews();
+            if (ddefViews.All(x => x.DeploymentDefinition != definition))
             {
-                AddDeploymentDefinition(definition);
+                AddDeploymentDefinition(definition, ddefViews.Count);
             }
         }
 
-        void AddDeploymentDefinition(DeploymentDefinition definition)
+        void AddDeploymentDefinition(DeploymentDefinition definition, int nbViews)
         {
             var definitionView = new DeploymentDefinitionView();
             definitionView.Bind(definition, definition == m_DeploymentDefinitionService.DefaultDefinition);
             definitionView.DoubleClickDeployed += (elementView) => OnDefinitionDeployedFromDoubleClick(elementView as DeploymentDefinitionView);
             definitionView.ContextMenuRequested += BuildContextMenu;
-            m_TreeViewElement.Add(definitionView);
+            var index = definition == m_DeploymentDefinitionService.DefaultDefinition
+                ? 0
+                : m_DeploymentDefinitionService.DeploymentDefinitions.IndexOf(definition) + 1;
+            m_TreeViewElement.Insert(Mathf.Clamp(index, 0, nbViews), definitionView);
         }
 
         void AddDeploymentItem(IDeploymentItemViewModel deploymentItem)
@@ -344,12 +358,14 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             var definition = m_DeploymentDefinitionService.DefinitionForPath(itemView.Item.Path)
                 ?? m_DeploymentDefinitionService.DefaultDefinition;
             TryAddDeploymentDefinition(definition);
+
             GetViewFromModel(definition).AddChild(itemView);
         }
 
         void RebuildTree()
         {
             var deploymentItemViews = new List<DeploymentItemView>();
+
             foreach (var definitionView in GetDeploymentDefinitionViews())
             {
                 foreach (var itemView in definitionView.GetDeploymentItemViews())
@@ -358,6 +374,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
                     definitionView.RemoveChild(itemView);
                 }
             }
+
             deploymentItemViews.ForEach(AddDeploymentItemView);
         }
 

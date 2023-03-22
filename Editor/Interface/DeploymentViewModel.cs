@@ -4,27 +4,33 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
+using Unity.Services.Deployment.Editor.Analytics;
 using Unity.Services.Deployment.Editor.Environments;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
+using Unity.Services.Deployment.Editor.Shared.Logging;
 using Unity.Services.DeploymentApi.Editor;
-using Logger = Unity.Services.Deployment.Editor.Shared.Logging.Logger;
 
 namespace Unity.Services.Deployment.Editor.Interface
 {
     sealed class DeploymentViewModel : IDeploymentViewModel, IDisposable
     {
+        const string k_AnalyticsSource = "deployment window";
+
         public IReadOnlyObservable<IDeploymentItemViewModel> DeploymentItems => m_MergedViewModels;
 
         readonly IEnvironmentValidator m_EnvironmentValidator;
         readonly ObservableCollection<DeploymentProvider> m_DeploymentProviders;
         readonly MergedObservableCollection<DeploymentItemViewModel> m_MergedViewModels;
+        readonly IDeploymentAnalytics m_Analytics;
 
         public DeploymentViewModel(
             IEnvironmentValidator environmentValidator,
-            ObservableCollection<DeploymentProvider> deploymentProviders)
+            ObservableCollection<DeploymentProvider> deploymentProviders,
+            IDeploymentAnalytics analytics)
         {
             m_EnvironmentValidator = environmentValidator;
             m_DeploymentProviders = deploymentProviders;
+            m_Analytics = analytics;
 
             m_MergedViewModels = new MergedObservableCollection<DeploymentItemViewModel>(deploymentProviders
                 .Select(MapToViewModels));
@@ -34,24 +40,37 @@ namespace Unity.Services.Deployment.Editor.Interface
 
         public async Task DeployItemsAsync(IEnumerable<IDeploymentItemViewModel> items)
         {
-            var validationResult = await m_EnvironmentValidator.ValidateEnvironmentAsync();
+            var enumeratedItems = items.EnumerateOnce();
+            enumeratedItems.ForEach(item => item.IsBeingDeployed = true);
+            var analytics = m_Analytics.BeginDeploy(ItemsPerProvider(enumeratedItems), k_AnalyticsSource);
+            try
+            {
+                await ValidateEnvironment(enumeratedItems);
+                await ExecuteCommandAsync(enumeratedItems, p => p.DeployCommand);
+                analytics.SendSuccess();
+            }
+            catch (Exception e)
+            {
+                analytics.SendFailure(e);
+                Logger.LogException(e);
+                throw;
+            }
+            finally
+            {
+                enumeratedItems.ForEach(item => item.IsBeingDeployed = false);
+            }
+        }
 
+        async Task ValidateEnvironment(IEnumerable<IDeploymentItemViewModel> items)
+        {
+            var validationResult = await m_EnvironmentValidator.ValidateEnvironmentAsync();
             if (validationResult.Failed)
             {
-                Logger.LogError(validationResult.Error);
                 items.ForEach(item => item.Status = new DeploymentStatus(
                     "Invalid Environment",
                     validationResult.Error));
-                return;
+                throw new InvalidEnvironmentException(validationResult);
             }
-
-            var enumeratedItems = items.EnumerateOnce();
-            enumeratedItems.ForEach(item => item.IsBeingDeployed = true);
-            var providerCommands = m_DeploymentProviders.Select(provider => new Tuple<DeploymentProvider, Command>(provider, provider.DeployCommand)).ToList();
-            await ExecuteCommandAsync(providerCommands, enumeratedItems.Cast<DeploymentItemViewModel>()).ContinueWith(_ =>
-            {
-                enumeratedItems.ForEach(item => item.IsBeingDeployed = false);
-            });
         }
 
         void DeploymentProvidersOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -90,10 +109,33 @@ namespace Unity.Services.Deployment.Editor.Interface
             return provider.DeploymentItems.Map(i => new DeploymentItemViewModel(i, provider.Service));
         }
 
-        static async Task ExecuteCommandAsync(IEnumerable<Tuple<DeploymentProvider, Command>> providerCommands, IEnumerable<DeploymentItemViewModel> itemViewModels)
+        Task ExecuteCommandAsync(IReadOnlyCollection<IDeploymentItemViewModel> deploymentItemViewModels, Func<DeploymentProvider, Command> command)
         {
-            var deploymentItemViewModels = itemViewModels.EnumerateOnce();
+            var providerCommands = m_DeploymentProviders
+                .Select(provider => new Tuple<DeploymentProvider, Command>(provider, command(provider)))
+                .Where(tuple => tuple.Item2 != null)
+                .ToList();
+            return ExecuteCommandAsync(providerCommands, deploymentItemViewModels);
+        }
 
+        static IReadOnlyDictionary<string, List<IDeploymentItem>> ItemsPerProvider(IReadOnlyCollection<IDeploymentItemViewModel> items)
+        {
+            var mapping = new Dictionary<string, List<IDeploymentItem>>();
+            foreach (var item in items)
+            {
+                var key = item.Service ?? "NULL";
+                if (!mapping.ContainsKey(key))
+                {
+                    mapping[key] = new List<IDeploymentItem>();
+                }
+                mapping[key].Add(item.OriginalItem);
+            }
+
+            return mapping;
+        }
+
+        static async Task ExecuteCommandAsync(IEnumerable<Tuple<DeploymentProvider, Command>> providerCommands, IReadOnlyCollection<IDeploymentItemViewModel> deploymentItemViewModels)
+        {
             var commandTasks = new List<Task>();
 
             foreach (var tuple in providerCommands)

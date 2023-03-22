@@ -13,7 +13,12 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             // This method should be overriden by test windows
             // so as to not use the real RuntimeServices
             DeploymentServices.Instance.InitializeInstance(this);
-            LoadGui();
+
+            if (!m_Initialized)
+            {
+                LoadGui();
+            }
+
             m_Initialized = true;
         }
 

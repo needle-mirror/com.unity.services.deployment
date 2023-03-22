@@ -1,39 +1,23 @@
-# Deployment Package
+# Deployment package
 
-This package contains the [Deployment Window](./deployment_window.md)
-implementation and its associated features.
+The Deployment package provides a cohesive interface to deploy assets for Unity Gaming Services (UGS).
+It provides the base tooling for UGS to have shared functionality for deploying service configuration files on the servers.
 
-See ["Getting Started"](./getting_started.md) to get started.
-See ["Package Usage"](./package_usage.md) for details.
-
-## Deployment Window
-
-The [Deployment Window](./deployment_window.md) allows to deploy
-assets to their respective services, as well as other relevant
-service specific manipulations.
-
-It is a cohesive interface for all service asset deployment needs.
-
-> A "deployment" is when service configuration files are put in sync
+> [!NOTE]
+> A deployment is when service configuration files are synced
 with service resources so that service clients can interact with them.
 
-## Deployment Definition
+The Deployment package is not used on its own. Services integrate with it, allowing the service configuration to
+be saved in version control.
 
-A deployment definition is the logical corollary of assembly
-definition but for service assets.
+|Topic|Description|
+|---|---|
+|[Getting started](./getting_started.md)|Get started with the Deployment package.|
+|[Deployment window](./deployment_window.md)|Use the Deployment window to deploy assets.|
+|[Deployment Definition](./deployment_definition.md)|Use Deployment Definitions to group assets for deployment.|
+|[Environments](./environments.md)|Deploy assets to specific environments.|
 
-It allows you to group them and have additional settings associated with them.
+## Supported packages
 
-For more information, consult the [Deployment Definition](./deployment_definition.md) documentation.
-
-## Environments
-
-The package contains a project setting to allow changing
-the target environment for deployment purposes.
-
-For more information, consult the [Environments](./environments.md) documentation.
-
-## [Supported Packages](#supported-packages)
-
-[com.unity.services.cloudcode](https://docs.unity.com/cloud-code) **from 2.1.0**
-[com.unity.remote-config](https://docs.unity.com/remote-config) **from 3.2.0**
+- [com.unity.services.cloudcode](https://docs.unity.com/cloud-code) **from 2.1.0**
+- [com.unity.remote-config](https://docs.unity.com/remote-config) **from 3.2.0**

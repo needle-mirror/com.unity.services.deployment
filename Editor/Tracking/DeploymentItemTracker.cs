@@ -35,6 +35,11 @@ namespace Unity.Services.Deployment.Editor.Tracking
                 OnAssetImported(addedPath);
             }
 
+            foreach (var movedAssetPath in e.MovedAssetPaths)
+            {
+                OnAssetImported(movedAssetPath);
+            }
+
             foreach (var deletedPath in e.DeletedAssetPaths)
             {
                 OnAssetDeleted(deletedPath);

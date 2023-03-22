@@ -1,70 +1,88 @@
-# Deployment Window
-This window allows you to upload cloud assets to their respective cloud service.
-To access the deployment window:
-* In 2021 or before, use `Window > Deployment`
-* In 2022 and later, use `Services > Deployment`
+# Deployment window
+
+The Deployment window lets you deploy assets to their respective services, as well as other relevant
+service-specific manipulations. The Deployment window detects and displays any deployable assets in your project.
+
+To access the Deployment window:
+
+* In 2021 or before, use **Window** > **Deployment**.
+* In 2022 and later, use **Services** > **Deployment**.
  
-## Toolbar
-The toolbar in the Deployment Window contains a set of features to help with deploying assets.
+## Deployment window UI
 
-### Selection
-The selection can be done in multiple ways
-1. Click on an item in the Deployment Window
-2. Click on the checkbox of an item.
-3. Click on the checkbox of a deployment definition to select all items under that deployment definition.
+The following table describes the Deployent window.
 
-### Deploy Selected
-This button will deploy the selected assets to the chosen environment.
+<table>
+  <thead>
+    <tr>
+      <th colspan="1"><strong>Field</strong></th>
+      <th colspan="2"><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+        <td><strong>Deploy Selected</strong></td>
+        <td colspan="2">Deploys the selected assets to the chosen environment.</td>
+    </tr>
+    <tr>
+        <td><strong>Deploy All</strong></td>
+        <td colspan="2">Deploys all assets to the chosen environment.</td>
+    </tr>
+    <tr>
+        <td>Environment view</td>
+        <td colspan="2">Shows the current environment where the assets will be deployed to. &lt;br/&gt;This dropdown contains a shortcut to <strong>Project Settings</strong> &gt; <strong>Services</strong> &gt; <strong>Deployment</strong> &gt; <strong>Environment Selector</strong> where you can modify the environment.</td>
+    </tr>
+    <tr>
+        <td rowspan="3"><strong>More</strong> (&vellip;) menu</td>
+        <td colspan="2">Contains additional options for the Deployment window.</td>
+    </tr>
+    <tr>
+        <td><strong>Deploy All on Play</strong></td>
+        <td>Triggers all assets to be deployed when the Unity Editor transitions from edit mode to play mode. The Unity Editor waits for file deployment to be completed before entering play mode.</td>
+    </tr>
+    <tr>
+        <td><strong>Block Playmode on Failure</strong></td>
+        <td>Blocks Play Mode from running when a file fails to deploy via <strong>Deploy Selected on Play</strong>.</td>
+    </tr>
+    <tr>
+        <td><strong>Name</strong></td>
+        <td colspan="2">Displays the name of the asset.</td>
+    </tr>
+    <tr>
+        <td><strong>Service</strong></td>
+        <td colspan="2">Displays the name of the service that the asset relates to.</td>
+    </tr>
+    <tr>
+        <td><strong>Deployment Status</strong></td>
+        <td colspan="2">Describes the status of an asset with respect to the remote resource.</td>
+    </tr>
+    <tr>
+        <td>Status panel</td>
+        <td colspan="2">The status panel in the bottom of the Deployment window describes additional details regarding an asset's status. An asset can contain multiple states.</td>
+    </tr>
+    <tr>
+        <td rowspan="4">Context menu</td>
+        <td colspan="2">Displays additional actions available for each asset, depending on the service. Right-click on an asset to display the context menu.</td>
+    </tr>
+    <tr>
+        <td><strong>Deploy</strong></td>
+        <td>Deploys the selected items.</td>
+    </tr>
+    <tr>
+        <td><strong>Select In Project Window</strong></td>
+        <td>Selects the asset in the Project window if it is an Unity asset.</td>
+    </tr>
+    <tr>
+        <td><strong>Open</strong></td>
+        <td>Opens the asset in the appropriate editor, for supported assets.</td>
+    </tr>
+  </tbody>
+</table>
 
-### Deploy All
-This button will deploy all assets to the chosen environment.
-
-### Environment View
-This dropdown shows the current environment unto which
-the assets will be deployed to.
-
-This dropdown contains a shortcut to 
-`Project Settings > Services > Deployment > Environment Selector` where the
-environment might be modified.
-
-### Additional Options (⋮) 
-This toolbar menu contains additional options of the
-Deployment Window.
-
-#### Deploy All on Play
-This toggle triggers all assets to be deployed when the Unity Editor transitions from edit mode to play mode.
-The Unity Editor will wait for file deployment to be completed before entering play mode.
-
-## Asset List
-Lists assets that can be deployed in the Deployment Window.
-The assets can be uniquely or multi-selected.
-
-### Context Menu
-A custom context menu can be accessed when right-clicking on an asset within the Asset List. 
-
-A few options are available, but more might be available depending on the service.
-
-#### Deploy
-Deploys the selected items
-
-#### Select In Project Window
-Selects the asset in the Project Window if it is an Unity asset
-
-#### Open 
-Opens the asset in the appropriate editor.
-This might not be available to all items.
-
-### Deployment Status
-Describes the status of an asset with respect to the remote resource.
-It is displayed under the status column of the Deployment Window.
-
-### Asset States
-Describes the local states of an asset. An asset can contain multiple states.
-It is displayed under the asset name in the Deployment Window.
+## Icons
 
 ### Warning
-The warning icon appears to bring attention to an issue with the asset
+The warning icon is displayed to highlight an issue with the asset.
 
 ### Error
-The error icon will appear when the asset has failed to deploy 
-or other failure states associated with each service.
+The error icon is displayed when the asset has failed to deploy or there are other failure states associated with each service.

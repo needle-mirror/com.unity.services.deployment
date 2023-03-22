@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using Unity.Services.Core.Editor;
-using Unity.Services.Deployment.Editor.Analytics.Environment;
-using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.Environments;
 using Unity.Services.Deployment.Editor.Environments.UI;
 using UnityEditor;
@@ -20,31 +18,23 @@ namespace Unity.Services.Deployment.Editor.Settings
         protected override string Title { get; } = k_ServiceName;
         protected override string Description { get; } = "Move assets and configurations to backend services from within the editor";
 
-        readonly IEnvironmentAnalytics m_Analytics;
-        readonly IEnvironmentFetcher m_Fetcher;
-        readonly IDeploymentSettings m_DeploymentSettings;
+        readonly IEnvironmentService m_EnvironmentService;
 
         DeploymentSettingsProvider(
-            IEnvironmentAnalytics analytics,
-            IEnvironmentFetcher environmentFetcher,
-            IDeploymentSettings deploymentSettings,
+            IEnvironmentService environmentService,
             string path,
             SettingsScope scopes,
             IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
         {
-            m_Analytics = analytics;
-            m_Fetcher = environmentFetcher;
-            m_DeploymentSettings = deploymentSettings;
+            m_EnvironmentService = environmentService;
         }
 
         [SettingsProvider]
         public static SettingsProvider CreateSettingsProvider()
         {
             return new DeploymentSettingsProvider(
-                DeploymentServices.Instance.GetService<IEnvironmentAnalytics>(),
-                DeploymentServices.Instance.GetService<IEnvironmentFetcher>(),
-                DeploymentServices.Instance.GetService<IDeploymentSettings>(),
+                DeploymentServices.Instance.GetService<IEnvironmentService>(),
                 GenerateProjectSettingsPath(k_ServiceName),
                 SettingsScope.Project);
         }
@@ -52,10 +42,7 @@ namespace Unity.Services.Deployment.Editor.Settings
         protected override VisualElement GenerateServiceDetailUI()
         {
             var environmentSelector = new EnvironmentSelector();
-            environmentSelector.Bind(
-                m_Analytics,
-                m_Fetcher,
-                m_DeploymentSettings);
+            environmentSelector.Bind(m_EnvironmentService);
             return environmentSelector;
         }
 

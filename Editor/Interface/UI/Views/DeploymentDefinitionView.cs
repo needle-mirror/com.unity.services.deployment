@@ -6,6 +6,7 @@ using Unity.Services.Deployment.Editor.DeploymentDefinitions;
 using Unity.Services.Deployment.Editor.Interface.UI.Components;
 using Unity.Services.Deployment.Editor.Interface.UI.Events;
 using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
+using Unity.Services.Deployment.Editor.Shared.Threading;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using UnityEngine.UIElements;
 
@@ -20,6 +21,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         readonly ModelBinding<DeploymentDefinition> m_ItemBindings;
         bool m_IsDefault;
         string m_Path;
+        State m_SortState;
 
         CollapseToggle m_CollapseToggle;
         CheckmarkToggle m_CheckmarkToggle;
@@ -74,15 +76,29 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         public void AddChild(DeploymentItemView itemView)
         {
             this.Q(VisualElementNames.ContainerElement).Add(itemView);
-            this.Q(VisualElementNames.ContainerElement).Sort((a, b) =>
-            {
-                var itemA = (DeploymentItemView)a;
-                var itemB = (DeploymentItemView)b;
-                var itemAName = itemA.Item.Name ?? itemA.Item.Service;
-                var itemBName = itemB.Item.Name ?? itemB.Item.Service;
-                return string.Compare(itemAName, itemBName, StringComparison.Ordinal);
-            });
+
+            TriggerSort();
             RefreshVisibility();
+        }
+
+        void TriggerSort()
+        {
+            if (m_SortState == State.Idle)
+            {
+                Sync.RunNextUpdateOnMain(() =>
+                {
+                    this.Q(VisualElementNames.ContainerElement).Sort((a, b) =>
+                    {
+                        var itemA = (DeploymentItemView)a;
+                        var itemB = (DeploymentItemView)b;
+                        var itemAName = itemA.Item.Name ?? itemA.Item.Service;
+                        var itemBName = itemB.Item.Name ?? itemB.Item.Service;
+                        return string.Compare(itemAName, itemBName, StringComparison.Ordinal);
+                    });
+                    m_SortState = State.Idle;
+                });
+                m_SortState = State.SortPending;
+            }
         }
 
         public void RemoveChild(DeploymentItemView itemView)
@@ -158,5 +174,11 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         }
 
         new class UxmlFactory : UxmlFactory<DeploymentDefinitionView> {}
+
+        enum State
+        {
+            Idle,
+            SortPending
+        }
     }
 }

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Unity.Services.Deployment.Editor.Shared.Clients;
 using Unity.Services.DeploymentWindow.Environments.Client.Apis.Default;
@@ -19,7 +18,7 @@ namespace Unity.Services.Deployment.Editor.Environments
             m_TokenProvider = gatewayTokenProvider;
         }
 
-        public async Task<Dictionary<string, EnvironmentInfo>> FetchEnvironments()
+        public async Task<List<EnvironmentInfo>> FetchEnvironments()
         {
             var environmentsApi = await Build();
 
@@ -28,17 +27,16 @@ namespace Unity.Services.Deployment.Editor.Environments
                 return null;
             }
 
-            var environmentsList = await environmentsApi.GetEnvironments();
-            return environmentsList.ToDictionary(environmentInfo => environmentInfo.Name);
+            return await environmentsApi.GetEnvironments();
         }
 
-        public async Task<EnvironmentInfo> FetchEnvironment(string environmentId)
+        public async Task<EnvironmentInfo?> FetchEnvironment(string environmentId)
         {
             var environmentsApi = await Build();
 
             if (environmentsApi == null)
             {
-                return new EnvironmentInfo();
+                return null;
             }
 
             return await environmentsApi.GetEnvironment(environmentId);

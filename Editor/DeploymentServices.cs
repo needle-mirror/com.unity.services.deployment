@@ -4,7 +4,6 @@ using Unity.Services.Deployment.Editor.Commands;
 using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.DeploymentDefinitions;
 using Unity.Services.Deployment.Editor.Environments;
-using Unity.Services.Deployment.Editor.Environments.UI;
 using Unity.Services.Deployment.Editor.Interface;
 using Unity.Services.Deployment.Editor.Interface.UI.Components;
 using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
@@ -17,6 +16,7 @@ using Unity.Services.Deployment.Editor.Shared.DependencyInversion;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using Unity.Services.Deployment.Editor.State;
 using Unity.Services.Deployment.Editor.Tracking;
+using Unity.Services.Deployment.Editor.Validation;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -52,6 +52,7 @@ namespace Unity.Services.Deployment.Editor
             collection.Register(Factories.Default<IDeploymentWindowAnalytics, DeploymentWindowAnalytics>);
             collection.Register(Factories.Default<IDeployOnPlayAnalytics, DeployOnPlayAnalytics>);
             collection.Register(Factories.Default<IProjectPreferences, ProjectPreferences>);
+            collection.Register(Factories.Default<IDeploymentAnalytics, DeploymentAnalytics>);
             collection.RegisterSingleton(Factories.Default<IDeploymentSettings, DeploymentSettings>);
 
             collection.Register(Factories.Default<ICurrentTime, CurrentTime>);
@@ -60,9 +61,9 @@ namespace Unity.Services.Deployment.Editor
 
             collection.Register(Factories.Default<IEnvironmentAnalytics, EnvironmentAnalytics>);
             collection.Register(Factories.Default<IEnvironmentFetcher, EnvironmentsApiFactory>);
+            collection.RegisterSingleton(Factories.Default<IEnvironmentService, EnvironmentService>);
             collection.Register(Factories.Default<IProjectInfo, ProjectInfo>);
 
-            collection.Register(Factories.Default<EnvironmentDropdown>);
             collection.Register(Factories.Default<IEnvironmentValidator, EnvironmentValidator>);
             collection.RegisterSingleton(Factories.Default<IEnvironmentProvider, DeploymentSettings>);
 
@@ -72,6 +73,8 @@ namespace Unity.Services.Deployment.Editor
             collection.Register(Factories.Default<IDeploymentWindowStateProvider, DeploymentWindowStateProvider>);
             collection.Register(Factories.Default<IDeploymentItemTracker, DeploymentItemTracker>);
             collection.Register(Factories.Default<INotifications, Notifications>);
+
+            collection.RegisterStartupSingleton(Factories.Default<DeploymentItemValidator>);
 
             collection.RegisterSingleton(Factories.Default<ICommandManager, DeploymentCommandManager>);
             collection.Register(Factories.Default<SelectInProjectWindowCommand>);

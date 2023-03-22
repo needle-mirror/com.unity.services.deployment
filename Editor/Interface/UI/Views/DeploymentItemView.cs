@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -10,7 +11,6 @@ using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using Unity.Services.DeploymentApi.Editor;
-using UnityEngine;
 using UnityEngine.UIElements;
 using ProgressBar = UnityEngine.UIElements.ProgressBar;
 using SeverityLevel = Unity.Services.DeploymentApi.Editor.SeverityLevel;
@@ -29,7 +29,6 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         VisualElement m_ItemStateContainer;
         readonly List<DeploymentItemStateView> m_StateViews;
 
-        string m_Path;
         string m_StatusClass;
         readonly ModelBinding<IDeploymentItemViewModel> m_ItemBindings;
         readonly Dictionary<SeverityLevel, string> m_DeploymentSeverityLevelToClassName;
@@ -71,14 +70,6 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
                 SetStatus(item.Status);
             });
-            m_ItemBindings.BindProperty(nameof(Item.Path), item =>
-            {
-                if (m_Path != item.Path)
-                {
-                    m_Path = item.Path;
-                    RebuildTreeEvent.Send(this);
-                }
-            });
 
             m_DeploymentSeverityLevelToClassName = new Dictionary<SeverityLevel, string>()
             {
@@ -107,6 +98,15 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             Item.States.CollectionChanged += OnItemStateCollectionChanged;
             Item.States.ForEach(AddAssetStateView);
             Item.DeploymentStateChanged += OnDeploymentStateChanged;
+            Item.PropertyChanged += OnItemPropertyChanged;
+        }
+
+        void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Item.Path))
+            {
+                RebuildTreeEvent.Send(this);
+            }
         }
 
         void OnDeploymentStateChanged(bool deploying)
@@ -271,7 +271,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
             foreach (var assetState in states)
             {
-                if (!Item.States.Any(state => assetState.Equals(state)))
+                if (!Item.States.Any())
                 {
                     Item.States.Add(assetState);
                 }

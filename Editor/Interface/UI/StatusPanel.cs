@@ -1,4 +1,6 @@
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Text;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEngine.UIElements;
 
@@ -19,10 +21,12 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
                 if (m_SelectedItem != null)
                 {
                     m_SelectedItem.PropertyChanged -= OnItemPropertyChanged;
+                    m_SelectedItem.States.CollectionChanged -= StatesOnCollectionChanged;
                 }
 
                 m_SelectedItem = value;
                 m_SelectedItem.PropertyChanged += OnItemPropertyChanged;
+                m_SelectedItem.States.CollectionChanged += StatesOnCollectionChanged;
 
                 UpdateStatus();
             }
@@ -41,9 +45,21 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
         void UpdateStatus()
         {
             var itemStatus = m_SelectedItem.Status;
-            var status = $"{itemStatus.Message}\n{itemStatus.MessageDetail}";
+            var statusBuilder = new StringBuilder();
 
-            m_StatusLabel.text = status;
+            if (!string.IsNullOrEmpty(itemStatus.Message))
+            {
+                statusBuilder.AppendLine(itemStatus.Message);
+                statusBuilder.AppendLine(itemStatus.MessageDetail);
+            }
+
+            foreach (var state in m_SelectedItem.States)
+            {
+                statusBuilder.AppendLine(state.Description);
+                statusBuilder.AppendLine(state.Detail);
+            }
+
+            m_StatusLabel.text = statusBuilder.ToString();
         }
 
         void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -52,6 +68,11 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             {
                 UpdateStatus();
             }
+        }
+
+        void StatesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateStatus();
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.JsonUtils;
+using Unity.Services.Deployment.Editor.Shared.Threading;
 using UnityEngine.UIElements;
 
 namespace Unity.Services.Deployment.Editor.Interface.UI.Serialization
@@ -14,6 +15,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Serialization
         readonly IJsonConverter m_JsonConverter;
 
         VisualElement m_Control;
+        State m_State = State.Idle;
 
         public SerializationManager(
             IProjectPreferences projectPreferences,
@@ -42,7 +44,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Serialization
             var serializableComponents = m_SerializableComponentFetcher.GetSerializableComponents(m_Control);
             foreach (var sc in serializableComponents)
             {
-                sc.ValueChanged -= Save;
+                sc.ValueChanged -= TriggerSave;
             }
 
             var payload = GetSavedSerialization();
@@ -60,7 +62,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Serialization
 
             foreach (var sc in serializableComponents)
             {
-                sc.ValueChanged += Save;
+                sc.ValueChanged += TriggerSave;
             }
         }
 
@@ -69,7 +71,20 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Serialization
             return m_JsonConverter.DeserializeObject<Dictionary<string, object>>(m_Preferences.GetString(k_SerializationKey));
         }
 
-        internal void Save()
+        internal void TriggerSave()
+        {
+            if (m_State == State.Idle)
+            {
+                Sync.RunNextUpdateOnMain(() =>
+                {
+                    Save();
+                    m_State = State.Idle;
+                });
+                m_State = State.Pending;
+            }
+        }
+
+        void Save()
         {
             var serializableComponents = m_SerializableComponentFetcher.GetSerializableComponents(m_Control);
             var dictionary = new Dictionary<string, object>();
@@ -84,6 +99,12 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Serialization
             });
             var payload = m_JsonConverter.SerializeObject(dictionary);
             m_Preferences.SetString(k_SerializationKey, payload);
+        }
+
+        enum State
+        {
+            Idle,
+            Pending
         }
     }
 }

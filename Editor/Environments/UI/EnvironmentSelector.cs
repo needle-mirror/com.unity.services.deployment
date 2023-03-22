@@ -1,11 +1,7 @@
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using Unity.Services.Deployment.Editor.Analytics.Environment;
-using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.Shared.Threading;
+using Unity.Services.Deployment.Editor.Shared.UI;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -16,53 +12,72 @@ namespace Unity.Services.Deployment.Editor.Environments.UI
     {
         static readonly string k_UxmlPath = Path.Combine(Constants.k_EditorRootPath, "Environments/UI/Assets/EnvironmentSelectorUI.uxml");
 
-        IEnvironmentAnalytics m_EnvironmentAnalytics;
-        IEnvironmentFetcher m_EnvironmentFetcher;
-        IDeploymentSettings m_DeploymentSettings;
-        EnvironmentDropdown m_EnvironmentDropdown;
-        EnvironmentInfo m_EmptyEnvironment;
-
-        Dictionary<string, EnvironmentInfo> m_EnvironmentMap;
+        readonly ModelBinding<IEnvironmentService> m_EnvironmentBindings;
 
         VisualElement m_ContainerDropdown;
         VisualElement m_ContainerFetching;
         VisualElement m_ContainerWarning;
 
-        public void Bind(IEnvironmentAnalytics environmentAnalytics,
-            IEnvironmentFetcher environmentFetcher,
-            IDeploymentSettings deploymentSettings)
+        public EnvironmentSelector()
         {
-            m_EnvironmentAnalytics = environmentAnalytics;
-            m_EnvironmentFetcher = environmentFetcher;
-            m_DeploymentSettings = deploymentSettings;
-            m_EnvironmentDropdown = new EnvironmentDropdown(environmentAnalytics, deploymentSettings);
-            m_EmptyEnvironment = new EnvironmentInfo() {Id = string.Empty, IsDefault = false, Name = string.Empty};
-            m_EnvironmentMap = new Dictionary<string, EnvironmentInfo>
+            m_EnvironmentBindings = new ModelBinding<IEnvironmentService>(this);
+            m_EnvironmentBindings.BindProperty(nameof(IEnvironmentService.Environments), service =>
             {
-                {m_EmptyEnvironment.Name, m_EmptyEnvironment}
-            };
+                if (service.Environments == null)
+                {
+                    SetVisibleContainer(m_ContainerFetching);
+                }
+                else
+                {
+                    var dropdownField = this.Q<DropdownField>();
+                    dropdownField.choices = service.Environments.Select(env => env.Name).ToList();
+
+                    var currentEnvInfo = service.ActiveEnvironmentInfo();
+                    if (currentEnvInfo != null)
+                    {
+                        dropdownField.SetValueWithoutNotify(currentEnvInfo.Value.Name);
+                    }
+
+                    SetVisibleContainer(m_ContainerDropdown);
+                }
+            });
+            m_EnvironmentBindings.BindProperty(nameof(IEnvironmentService.ActiveEnvironmentId), service =>
+            {
+                OnEnvironmentChanged(service.ActiveEnvironmentInfo());
+            });
+        }
+
+        public void Bind(IEnvironmentService environmentService)
+        {
+            m_EnvironmentBindings.Source = environmentService;
 
             Setup();
-            RefreshUI();
+
+            var dropdownField = this.Q<DropdownField>();
+            dropdownField.RegisterValueChangedCallback(v =>
+            {
+                var info = environmentService.EnvironmentInfoFromName(v.newValue);
+                if (info != null)
+                {
+                    environmentService.SetActiveEnvironment(info.Value);
+                }
+            });
 
             Sync.SafeAsync(async() =>
             {
-                await FetchEnvironments();
-                OnEnvironmentChanged(GetEnvironmentInfoForGuid(m_DeploymentSettings.EnvironmentGuid));
-                Sync.RunNextUpdateOnMain(RefreshUI);
+                await environmentService.RefreshAsync();
             });
         }
 
         void Setup()
         {
-            m_EnvironmentAnalytics.RegisterEnvironmentChangedEvent();
             LoadUxml(this);
             SetupDropdown(this);
             SetupManageEnvironments(this);
             SetupWarning(this);
         }
 
-        void LoadUxml(VisualElement containerElement)
+        static void LoadUxml(VisualElement containerElement)
         {
             var uxmlAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(k_UxmlPath);
             if (uxmlAsset != null)
@@ -81,7 +96,7 @@ namespace Unity.Services.Deployment.Editor.Environments.UI
             m_ContainerFetching = containerElement.Q(UxmlNames.ContainerFetching);
         }
 
-        void SetupManageEnvironments(VisualElement containerElement)
+        static void SetupManageEnvironments(VisualElement containerElement)
         {
             var containerManageEnvironments = containerElement.Q(UxmlNames.ContainerManageEnvironments);
 #if ENABLE_EDITOR_GAME_SERVICES
@@ -99,35 +114,13 @@ namespace Unity.Services.Deployment.Editor.Environments.UI
         {
             m_ContainerWarning = containerElement.Q(UxmlNames.ContainerWarning);
             m_ContainerWarning.style.display = DisplayStyle.None;
-
-            m_DeploymentSettings.PropertyChanged += OnEnvironmentGuidChanged;
         }
 
-        void OnEnvironmentGuidChanged(object obj, PropertyChangedEventArgs e)
+        void OnEnvironmentChanged(EnvironmentInfo? environmentInfo)
         {
-            if (e.PropertyName == nameof(m_DeploymentSettings.EnvironmentGuid))
-            {
-                OnEnvironmentChanged(GetEnvironmentInfoForGuid(m_DeploymentSettings.EnvironmentGuid));
-            }
-        }
-
-        void OnEnvironmentChanged(EnvironmentInfo environmentInfo)
-        {
-            m_ContainerWarning.style.display = environmentInfo.IsDefault
+            m_ContainerWarning.style.display = environmentInfo?.IsDefault ?? false
                 ? DisplayStyle.Flex
                 : DisplayStyle.None;
-        }
-
-        EnvironmentInfo GetEnvironmentInfoForGuid(string environmentGuid)
-        {
-            return m_EnvironmentMap
-                .Values
-                .FirstOrDefault(info => info.Id == environmentGuid);
-        }
-
-        void RefreshUI()
-        {
-            SetVisibleContainer(m_EnvironmentDropdown.IsReady ? m_ContainerDropdown : m_ContainerFetching);
         }
 
         void SetVisibleContainer(VisualElement containerElement)
@@ -140,19 +133,6 @@ namespace Unity.Services.Deployment.Editor.Environments.UI
                 containerElement == m_ContainerFetching
                 ? DisplayStyle.Flex
                 : DisplayStyle.None;
-        }
-
-        async Task FetchEnvironments()
-        {
-            m_EnvironmentMap = await m_EnvironmentFetcher.FetchEnvironments();
-
-            if (m_EnvironmentMap == null)
-            {
-                m_EnvironmentMap = new Dictionary<string, EnvironmentInfo>();
-            }
-
-            m_EnvironmentMap.Add(m_EmptyEnvironment.Name, m_EmptyEnvironment);
-            m_EnvironmentDropdown.Setup(this, m_EnvironmentMap);
         }
 
         static class UxmlNames

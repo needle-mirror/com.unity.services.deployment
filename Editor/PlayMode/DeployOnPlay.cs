@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -16,11 +17,13 @@ namespace Unity.Services.Deployment.Editor.PlayMode
     {
         const string k_ProgressBarTitle = "Deploy On Play Progress";
         const string k_ProgressBarInfo = "Deploying files";
+        const string k_AnalyticsSource = "deploy on play";
 
         readonly ObservableCollection<DeploymentProvider> m_Providers;
         readonly IEnvironmentValidator m_EnvironmentValidator;
         readonly IDeploymentSettings m_Settings;
         readonly IDeployOnPlayAnalytics m_DeployOnPlayAnalytics;
+        readonly IDeploymentAnalytics m_DeploymentAnalytics;
         readonly INotifications m_Notifications;
         readonly IDeployOnPlayItemRetriever m_DeployOnPlayItemRetriever;
 
@@ -30,7 +33,8 @@ namespace Unity.Services.Deployment.Editor.PlayMode
                             IDeploymentSettings settings,
                             IDeployOnPlayAnalytics deployOnPlayAnalytics,
                             INotifications notifications,
-                            IDeployOnPlayItemRetriever deployOnPlayItemRetriever)
+                            IDeployOnPlayItemRetriever deployOnPlayItemRetriever,
+                            IDeploymentAnalytics deploymentAnalytics)
         {
             m_Providers = providers;
             m_Settings = settings;
@@ -38,6 +42,7 @@ namespace Unity.Services.Deployment.Editor.PlayMode
             m_EnvironmentValidator = environmentValidator;
             m_Notifications = notifications;
             m_DeployOnPlayItemRetriever = deployOnPlayItemRetriever;
+            m_DeploymentAnalytics = deploymentAnalytics;
             playModeInterrupt.OnPlay(ValidateEnvironment, DeployAllAsync);
         }
 
@@ -69,6 +74,8 @@ namespace Unity.Services.Deployment.Editor.PlayMode
                     k_ProgressBarInfo,
                     itemsToDeploy.Count);
 
+                var itemsPerProvider = new Dictionary<string, List<IDeploymentItem>>();
+
                 foreach (var provider in m_Providers)
                 {
                     var deployCommand = provider.DeployCommand;
@@ -80,11 +87,26 @@ namespace Unity.Services.Deployment.Editor.PlayMode
                         continue;
                     }
 
-                    var providerItemsToDeploy = provider.DeploymentItems.Where(item => itemsToDeploy.Contains(item));
+                    var providerItemsToDeploy = provider.DeploymentItems.Where(item => itemsToDeploy.Contains(item)).ToList();
+                    itemsPerProvider[provider.Service ?? "NULL"] = providerItemsToDeploy;
+
                     tasks.Add(DeployItemsAsync(provider.DeployCommand, providerItemsToDeploy, progressBar));
                 }
 
-                await Task.WhenAll(tasks);
+                var deployEvent = m_DeploymentAnalytics.BeginDeploy(itemsPerProvider, k_AnalyticsSource);
+                try
+                {
+                    Logger.LogVerbose($"[DeployOnPlay] Deployment Started");
+                    await Task.WhenAll(tasks);
+                    deployEvent.SendSuccess();
+                    Logger.LogVerbose($"[DeployOnPlay] Deployment Succeeded");
+                }
+                catch (Exception e)
+                {
+                    Logger.LogVerbose($"[DeployOnPlay] Deployment Failed: {e}");
+                    deployEvent.SendFailure(e);
+                    throw;
+                }
             }
         }
 
