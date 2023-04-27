@@ -7,5 +7,6 @@ namespace Unity.Services.Deployment.Editor.Shared.Assets
         public string[] DeletedAssetPaths;
         public string[] MovedAssetPaths;
         public string[] MovedFromAssetPaths;
+        public bool DidDomainReload;
     }
 }

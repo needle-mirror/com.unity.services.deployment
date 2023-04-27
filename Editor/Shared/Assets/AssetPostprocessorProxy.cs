@@ -18,14 +18,16 @@ namespace Unity.Services.Deployment.Editor.Shared.Assets
             string[] importedAssetPaths,
             string[] deletedAssetPaths,
             string[] movedAssetPaths,
-            string[] movedFromAssetPaths)
+            string[] movedFromAssetPaths,
+            bool didDomainReload)
         {
             s_AllAssetsPostprocessed?.Invoke(null, new PostProcessEventArgs
             {
                 ImportedAssetPaths = importedAssetPaths,
                 DeletedAssetPaths = deletedAssetPaths,
                 MovedAssetPaths = movedAssetPaths,
-                MovedFromAssetPaths = movedFromAssetPaths
+                MovedFromAssetPaths = movedFromAssetPaths,
+                DidDomainReload = didDomainReload
             });
         }
     }

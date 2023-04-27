@@ -4,6 +4,10 @@ All notable changes to the Deployment package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2023-04-27
+### Fixed
+- Assets not appearing on load in Unity 2022.
+
 ## [1.0.0] - 2023-03-22
 ### Fixed
 - Issues with displaying new environments in the Deployment window.

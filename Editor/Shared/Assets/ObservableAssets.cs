@@ -38,8 +38,12 @@ namespace Unity.Services.Deployment.Editor.Shared.Assets
                 .Where(path => !string.IsNullOrEmpty(path));
             foreach (var assetPath in assetPaths)
             {
-                var asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+                if (m_AssetPaths.ContainsKey(assetPath))
+                {
+                    continue;
+                }
 
+                var asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
                 if (asset == null)
                 {
                     continue;
@@ -51,6 +55,11 @@ namespace Unity.Services.Deployment.Editor.Shared.Assets
 
         void AllAssetsPostprocessed(object sender, PostProcessEventArgs args)
         {
+            if (args.DidDomainReload)
+            {
+                LoadAllAssets();
+            }
+
             foreach (var imported in args.ImportedAssetPaths)
             {
                 var asset = AssetDatabase.LoadAssetAtPath<T>(imported);
