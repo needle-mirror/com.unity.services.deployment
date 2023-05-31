@@ -1,13 +1,15 @@
+using System;
 using System.Linq;
+using Unity.Services.Core.Editor.Environments;
+using Unity.Services.Core.Editor.Environments.UI;
 using Unity.Services.Deployment.Editor.Analytics;
 using Unity.Services.Deployment.Editor.Commands;
 using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.DeploymentDefinitions;
-using Unity.Services.Deployment.Editor.Environments;
-using Unity.Services.Deployment.Editor.Environments.UI;
 using Unity.Services.Deployment.Editor.Interface.UI.Components;
 using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
 using Unity.Services.Deployment.Editor.Interface.UI.Views;
+using Unity.Services.Deployment.Editor.Shared.Analytics;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.IO;
 using Unity.Services.Deployment.Editor.State;
 using UnityEditor;
@@ -45,9 +47,9 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
         IDeploymentViewModel m_DeploymentViewModel;
         IDeploymentWindowAnalytics m_DeploymentWindowAnalytics;
         IDeploymentWindowStateProvider m_DeploymentWindowStateProvider;
-        IDeploymentDefinitionService m_DeploymentDefinitionService;
+        IEditorDeploymentDefinitionService m_DeploymentDefinitionService;
         IDeploymentSettings m_DeploymentSettings;
-        IEnvironmentService m_EnvironmentService;
+        IEnvironmentsApi m_EnvironmentService;
         ICommandManager m_CommandManager;
         IKeyboardShortcuts m_KeyboardShortcuts;
         ISerializationManager m_SerializationManager;
@@ -62,11 +64,19 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             StaticAnalytics.SendOpenedEvent();
         }
 
+        protected override void CreateGUI()
+        {
+            using (new AnalyticsTimer(duration => StaticAnalytics.SendInitializeTiming(nameof(DeploymentWindow), duration)))
+            {
+                base.CreateGUI();
+            }
+        }
+
         public void Initialize(IDeploymentWindowAnalytics deploymentWindowAnalytics,
             IDeploymentWindowStateProvider deploymentWindowStateProvider,
-            IDeploymentDefinitionService deploymentDefinitionService,
+            IEditorDeploymentDefinitionService deploymentDefinitionService,
             IDeploymentSettings deploymentSettings,
-            IEnvironmentService environmentService,
+            IEnvironmentsApi environmentsApi,
             IDeploymentViewModel deploymentViewModel,
             ICommandManager commandManager,
             IKeyboardShortcuts keyboardShortcuts,
@@ -76,7 +86,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             m_DeploymentWindowStateProvider = deploymentWindowStateProvider;
             m_DeploymentDefinitionService = deploymentDefinitionService;
             m_DeploymentSettings = deploymentSettings;
-            m_EnvironmentService = environmentService;
+            m_EnvironmentService = environmentsApi;
             m_DeploymentViewModel = deploymentViewModel;
             m_CommandManager = commandManager;
             m_KeyboardShortcuts = keyboardShortcuts;
@@ -217,7 +227,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
 
         void SetDeploymentView()
         {
-            if (!m_DeploymentViewModel.DeploymentItems.Any())
+            if (!m_DeploymentViewModel.DeploymentDefinitions.Any(d => d.DeploymentItemViewModels.Any()))
             {
                 SetView(m_EmptyListState);
                 return;

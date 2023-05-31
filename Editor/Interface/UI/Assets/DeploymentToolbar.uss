@@ -3,9 +3,12 @@
 }
 
 .help-button {
-    padding-left: 9px;
-    padding-right: 10px;
     border-right-width: 0;
+}
+
+.help-button-image {
+    width: 16px;
+    height: 16px;
 }
 
 .deployment-toolbar__content {

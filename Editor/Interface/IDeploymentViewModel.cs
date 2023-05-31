@@ -6,7 +6,11 @@ namespace Unity.Services.Deployment.Editor.Interface
 {
     interface IDeploymentViewModel
     {
-        IReadOnlyObservable<IDeploymentItemViewModel> DeploymentItems { get; }
-        Task DeployItemsAsync(IEnumerable<IDeploymentItemViewModel> items);
+        IReadOnlyObservable<IDeploymentDefinitionViewModel> DeploymentDefinitions { get; }
+
+        Task DeployItemsAsync(
+            IEnumerable<IDeploymentItemViewModel> items,
+            IEnumerable<int> itemsPerDeploymentDefinitions);
+        Task DeployDefinitionsAsync(IEnumerable<IDeploymentDefinitionViewModel> definitions);
     }
 }

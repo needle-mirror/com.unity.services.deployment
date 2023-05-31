@@ -1,23 +1,25 @@
 using System;
 using System.Linq;
+using Unity.Services.Core.Editor.Environments;
+using Unity.Services.Deployment.Core;
 using Unity.Services.Deployment.Editor.DeploymentDefinitions;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEditor;
 using UnityEngine;
+using Logger = Unity.Services.Deployment.Editor.Shared.Logging.Logger;
 
 namespace Unity.Services.Deployment.Editor.State
 {
     sealed class DeploymentWindowStateProvider : IDeploymentWindowStateProvider
     {
-        readonly IEnvironmentProvider m_EnvironmentProvider;
-        readonly IDeploymentDefinitionService m_DeploymentDefinitionService;
+        readonly IEnvironmentsApi m_EnvironmentsApi;
+        readonly IEditorDeploymentDefinitionService m_DeploymentDefinitionService;
 
         bool m_ContainsDuplicateDefinitions;
         string m_DuplicateDefinitionsError;
-
-        public DeploymentWindowStateProvider(IEnvironmentProvider environmentProvider, IDeploymentDefinitionService deploymentDefinitionService)
+        public DeploymentWindowStateProvider(IEnvironmentsApi environmentsApi, IEditorDeploymentDefinitionService deploymentDefinitionService)
         {
-            m_EnvironmentProvider = environmentProvider;
+            m_EnvironmentsApi = environmentsApi;
             m_DeploymentDefinitionService = deploymentDefinitionService;
 
             if (m_DeploymentDefinitionService.DeploymentDefinitions.Any())
@@ -25,7 +27,8 @@ namespace Unity.Services.Deployment.Editor.State
                 ValidateDeploymentDefinitionService();
             }
 
-            m_DeploymentDefinitionService.DeploymentDefinitions.CollectionChanged += OnDeploymentDefinitionsCollectionChanged;
+            m_DeploymentDefinitionService.ObservableDeploymentDefinitions.CollectionChanged += OnDeploymentDefinitionsCollectionChanged;
+            m_DeploymentDefinitionService.DeploymentDefinitionPathChanged += ValidateDeploymentDefinitionService;
         }
 
         public bool IsInternetConnected()
@@ -35,7 +38,7 @@ namespace Unity.Services.Deployment.Editor.State
 
         public bool IsEnvironmentSet()
         {
-            return !string.IsNullOrEmpty(m_EnvironmentProvider.Current);
+            return !string.IsNullOrEmpty(m_EnvironmentsApi.ActiveEnvironmentName);
         }
 
         public bool IsProjectLinked()
@@ -69,7 +72,7 @@ namespace Unity.Services.Deployment.Editor.State
 
         public void Dispose()
         {
-            m_DeploymentDefinitionService.DeploymentDefinitions.CollectionChanged -= OnDeploymentDefinitionsCollectionChanged;
+            m_DeploymentDefinitionService.ObservableDeploymentDefinitions.CollectionChanged -= OnDeploymentDefinitionsCollectionChanged;
         }
 
         void OnDeploymentDefinitionsCollectionChanged(object sender, EventArgs args)
@@ -86,6 +89,7 @@ namespace Unity.Services.Deployment.Editor.State
             {
                 m_ContainsDuplicateDefinitions = true;
                 m_DuplicateDefinitionsError = error;
+                Logger.LogError(m_DuplicateDefinitionsError);
             }
         }
     }

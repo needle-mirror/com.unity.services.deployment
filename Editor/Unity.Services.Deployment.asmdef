@@ -4,7 +4,9 @@
     "references": [
         "Unity.Services.DeploymentApi",
         "Unity.Services.Core.Editor",
-        "UnityEngine.UnityAnalyticsModule"
+        "UnityEngine.UnityAnalyticsModule",
+        "Unity.Services.Core.Environments.Editor",
+        "Unity.Services.Deployment.Core"
     ],
     "includePlatforms": [
         "Editor"

@@ -4,9 +4,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Unity.Services.Core.Editor.Environments;
 using Unity.Services.Deployment.Editor.Analytics;
 using Unity.Services.Deployment.Editor.Configuration;
-using Unity.Services.Deployment.Editor.Environments;
 using Unity.Services.Deployment.Editor.Shared.Logging;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using Unity.Services.DeploymentApi.Editor;
@@ -20,7 +20,6 @@ namespace Unity.Services.Deployment.Editor.PlayMode
         const string k_AnalyticsSource = "deploy on play";
 
         readonly ObservableCollection<DeploymentProvider> m_Providers;
-        readonly IEnvironmentValidator m_EnvironmentValidator;
         readonly IDeploymentSettings m_Settings;
         readonly IDeployOnPlayAnalytics m_DeployOnPlayAnalytics;
         readonly IDeploymentAnalytics m_DeploymentAnalytics;
@@ -28,34 +27,24 @@ namespace Unity.Services.Deployment.Editor.PlayMode
         readonly IDeployOnPlayItemRetriever m_DeployOnPlayItemRetriever;
 
         public DeployOnPlay(IPlayModeInterrupt playModeInterrupt,
-                            IEnvironmentValidator environmentValidator,
                             ObservableCollection<DeploymentProvider> providers,
                             IDeploymentSettings settings,
                             IDeployOnPlayAnalytics deployOnPlayAnalytics,
                             INotifications notifications,
                             IDeployOnPlayItemRetriever deployOnPlayItemRetriever,
-                            IDeploymentAnalytics deploymentAnalytics)
+                            IDeploymentAnalytics deploymentAnalytics,
+                            IEnvironmentsApi environmentsApi)
         {
             m_Providers = providers;
             m_Settings = settings;
             m_DeployOnPlayAnalytics = deployOnPlayAnalytics;
-            m_EnvironmentValidator = environmentValidator;
             m_Notifications = notifications;
             m_DeployOnPlayItemRetriever = deployOnPlayItemRetriever;
             m_DeploymentAnalytics = deploymentAnalytics;
-            playModeInterrupt.OnPlay(ValidateEnvironment, DeployAllAsync);
-        }
 
-        internal async Task<ValidationResult> ValidateEnvironment()
-        {
-            var validationResult = await m_EnvironmentValidator.ValidateEnvironmentAsync();
-
-            if (validationResult.Failed)
-            {
-                throw new InvalidEnvironmentException(validationResult);
-            }
-
-            return validationResult;
+            playModeInterrupt.OnPlay(
+                environmentsApi.ValidateEnvironmentAsync,
+                DeployAllAsync);
         }
 
         async Task DeployAllAsync()

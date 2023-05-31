@@ -6,6 +6,5 @@ namespace Unity.Services.Deployment.Editor.Configuration
     {
         bool ShouldDeployOnPlay { get; set; }
         bool BlockPlaymodeOnFailure { get; set; }
-        string EnvironmentGuid { get; set; }
     }
 }

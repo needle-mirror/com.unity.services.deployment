@@ -1,17 +1,15 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Unity.Services.Deployment.Editor.Analytics;
 using Unity.Services.Deployment.Editor.Commands;
+using Unity.Services.Deployment.Core.Model;
 using Unity.Services.Deployment.Editor.DeploymentDefinitions;
 using Unity.Services.Deployment.Editor.Interface.UI.Components;
 using Unity.Services.Deployment.Editor.Interface.UI.Events;
 using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
-using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using Unity.Services.Deployment.Editor.Shared.UI;
-using Unity.Services.DeploymentApi.Editor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -22,12 +20,11 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         const string k_DeployCommandName = "Deploy";
         const string k_OpenCommandName = "Open";
 
-        readonly CollectionBinding<IDeploymentItemViewModel> m_DeploymentItemBindings;
-        readonly CollectionBinding<DeploymentDefinition> m_DeploymentDefinitionBindings;
+        readonly CollectionBinding<IDeploymentDefinitionViewModel> m_DeploymentDefinitionBindings;
 
         IDeploymentViewModel m_DeploymentViewModel;
         IDeploymentWindowAnalytics m_DeploymentWindowAnalytics;
-        IDeploymentDefinitionService m_DeploymentDefinitionService;
+        IEditorDeploymentDefinitionService m_DeploymentDefinitionService;
         ICommandManager m_CommandManager;
         IKeyboardShortcuts m_KeyboardShortcuts;
         ISerializationManager m_SerializationManager;
@@ -44,17 +41,14 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
         public DeploymentView()
         {
-            m_DeploymentItemBindings = new CollectionBinding<IDeploymentItemViewModel>(this);
-            m_DeploymentDefinitionBindings = new CollectionBinding<DeploymentDefinition>(this);
-
-            m_DeploymentItemBindings.BindCollectionChanged(ObservableCollectionOnCollectionChanged);
-            m_DeploymentDefinitionBindings.BindCollectionChanged(ObservableCollectionOnCollectionChanged);
+            m_DeploymentDefinitionBindings = new CollectionBinding<IDeploymentDefinitionViewModel>(this);
+            m_DeploymentDefinitionBindings.BindCollectionChanged(OnDefinitionObservableCollectionChanged);
         }
 
         public void Bind(
             IDeploymentViewModel deploymentViewModel,
             IDeploymentWindowAnalytics deploymentWindowAnalytics,
-            IDeploymentDefinitionService deploymentDefinitionService,
+            IEditorDeploymentDefinitionService deploymentDefinitionService,
             ICommandManager commandManager,
             IKeyboardShortcuts keyboardShortcuts,
             ISerializationManager serializationManager)
@@ -83,20 +77,10 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             m_TreeViewElement.OnSelectionChanged += OnDeploymentItemSelectionChanged;
             OnDeploymentItemSelectionChanged();
 
-            TryAddDeploymentDefinition(m_DeploymentDefinitionService.DefaultDefinition);
-
-            RegisterCallback<RebuildTreeEvent>(RebuildTreeHandler);
-
-            m_DeploymentItemBindings.Source = m_DeploymentViewModel.DeploymentItems;
-            m_DeploymentDefinitionBindings.Source = m_DeploymentDefinitionService.DeploymentDefinitions.AsReadonly();
+            m_DeploymentDefinitionBindings.Source = m_DeploymentViewModel.DeploymentDefinitions;
 
             m_SerializationManager.Bind(this);
             m_SerializationManager.ApplySerialization();
-        }
-
-        void RebuildTreeHandler(RebuildTreeEvent e)
-        {
-            RebuildTree();
         }
 
         void OnDeploymentItemSelectionChanged()
@@ -115,12 +99,17 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             var checkedDeploymentItems = GetDeploymentViewsForDeployment(ItemRetrieval.Checked)
                 .Select(vm => vm.Item)
                 .ToList();
-            await m_DeploymentViewModel.DeployItemsAsync(checkedDeploymentItems);
+            var itemsPerDeploymentDefinitions = GetDeploymentDefinitionViews()
+                .Where(view => view.Checked)
+                .Select(view => view.ItemViews.Count)
+                .ToList();
+
+            await m_DeploymentViewModel.DeployItemsAsync(checkedDeploymentItems, itemsPerDeploymentDefinitions);
         }
 
         async void DeployAllButtonOnClicked()
         {
-            await m_DeploymentViewModel.DeployItemsAsync(m_DeploymentViewModel.DeploymentItems);
+            await m_DeploymentViewModel.DeployDefinitionsAsync(m_DeploymentViewModel.DeploymentDefinitions);
         }
 
         void OnAttachedToPanel()
@@ -139,19 +128,13 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             return this.Query<DeploymentDefinitionView>().ToList();
         }
 
-        IEnumerable<DeploymentItemView> GetAllDeploymentItemViews()
+        void BuildContextMenu(DeploymentElementViewBase viewBase, ContextualMenuPopulateEvent evt)
         {
-            return GetDeploymentDefinitionViews()
-                .SelectMany(definition => definition.GetDeploymentItemViews());
-        }
-
-        void BuildContextMenu(DeploymentElementViewBase itemView, ContextualMenuPopulateEvent evt)
-        {
-            evt.menu.AppendAction(k_DeployCommandName, _ => OnItemDeployedFromContextMenuClicked(itemView));
+            evt.menu.AppendAction(k_DeployCommandName, _ => OnItemDeployedFromContextMenuClicked(viewBase));
 
             var postCommandAction = new Dictionary<string, Action>
             {
-                { k_OpenCommandName, () => OnContextMenuItemOpened(itemView as DeploymentItemView) }
+                { k_OpenCommandName, () => OnContextMenuItemOpened(viewBase as DeploymentItemView) }
             };
 
             var modelSelection = GetSelection().ToList();
@@ -192,19 +175,24 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             var selectedModels = GetDeploymentViewsForDeployment(ItemRetrieval.Selected)
                 .Select(di => di.Item)
                 .ToList();
-            await m_DeploymentViewModel.DeployItemsAsync(selectedModels);
+            var itemsPerDeploymentDefinitions = GetDeploymentDefinitionViews()
+                .Where(view => view.Checked)
+                .Select(view => view.ItemViews.Count)
+                .ToList();
+
+            await m_DeploymentViewModel.DeployItemsAsync(selectedModels, itemsPerDeploymentDefinitions);
         }
 
         IEnumerable<object> GetSelection()
         {
-            foreach (var deploymentDefinition in GetDeploymentDefinitionViews())
+            foreach (var deploymentDefinitionView in GetDeploymentDefinitionViews())
             {
-                if (deploymentDefinition.Selected)
+                if (deploymentDefinitionView.Selected)
                 {
-                    yield return deploymentDefinition.DeploymentDefinition;
+                    yield return deploymentDefinitionView.DeploymentDefinition;
                 }
 
-                foreach (var div in deploymentDefinition.GetSelectedDeploymentItemViews())
+                foreach (var div in deploymentDefinitionView.GetSelectedDeploymentItemViews())
                 {
                     yield return div.Item.OriginalItem;
                 }
@@ -216,28 +204,22 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             return GetDeploymentDefinitionViews().SelectMany(item => item.GetDeploymentViewsForDeployment(itemRetrieval));
         }
 
-        void ObservableCollectionOnCollectionChanged<T>(IReadOnlyCollection<T> collection, NotifyCollectionChangedEventArgs e)
+        void OnDefinitionObservableCollectionChanged(
+            IReadOnlyCollection<IDeploymentDefinitionViewModel> collection,
+            NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Reset)
             {
-                if (typeof(T) == typeof(IDeploymentItemViewModel))
-                {
-                    RemoveOldItems(GetAllDeploymentItemViews().Select(i => i.Item));
-                    AddNewItems(collection);
-                }
-                else if (typeof(T) == typeof(DeploymentDefinition))
-                {
-                    var toRemove = GetDeploymentDefinitionViews()
-                        .Select(i => i.DeploymentDefinition)
-                        .Where(m => m != m_DeploymentDefinitionService.DefaultDefinition);
-                    RemoveOldItems(toRemove);
-                    AddNewItems(collection);
-                }
+                var toRemove = GetDeploymentDefinitionViews()
+                    .Select(i => i.DeploymentDefinition)
+                    .Where(m => m != m_DeploymentDefinitionService.DefaultDefinition);
+                RemoveOldItems(toRemove);
+                AddNewItems(collection);
             }
             else
             {
-                RemoveOldItems(e.OldItems);
-                AddNewItems(e.NewItems);
+                RemoveOldItems(e.OldItems?.Cast<IDeploymentDefinitionViewModel>());
+                AddNewItems(e.NewItems?.Cast<IDeploymentDefinitionViewModel>());
             }
 
             if (e.NewItems != null && e.NewItems.Count > 0)
@@ -246,96 +228,81 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             }
         }
 
-        void RemoveOldItems(IEnumerable oldItems)
+        void RemoveOldItems(IEnumerable<IDeploymentDefinitionViewModel> definitionViewModels)
         {
-            if (oldItems == null)
+            if (definitionViewModels == null)
                 return;
 
-            foreach (var oldItem in oldItems)
+            foreach (var definitionViewModel in definitionViewModels)
             {
-                if (oldItem is IDeploymentItemViewModel item)
-                    RemoveDeploymentItem(item);
-                else if (oldItem is DeploymentDefinition definition)
-                {
-                    RemoveDeploymentDefinition(definition);
-                }
+                RemoveDeploymentDefinition(definitionViewModel);
             }
         }
 
-        void AddNewItems(IEnumerable newItems)
+        void AddNewItems(IEnumerable<IDeploymentDefinitionViewModel> definitionViewModels)
         {
-            if (newItems == null)
+            if (definitionViewModels == null)
                 return;
 
-            foreach (var newItem in newItems)
+            foreach (var definitionViewModel in definitionViewModels)
             {
-                if (newItem is IDeploymentItemViewModel item)
-                {
-                    AddDeploymentDefinitionForItem(item);
-                    AddDeploymentItem(item);
-                }
-                else if (newItem is DeploymentDefinition definition)
-                {
-                    TryAddDeploymentDefinition(definition);
-                }
-            }
-
-            RebuildTree();
-        }
-
-        DeploymentDefinitionView GetViewFromModel(DeploymentDefinition definition)
-        {
-            return GetDeploymentDefinitionViews().First(x => x.DeploymentDefinition == definition);
-        }
-
-        void AddDeploymentDefinitionForItem(IDeploymentItem deploymentItem)
-        {
-            var definition = m_DeploymentDefinitionService.DefinitionForPath(deploymentItem.Path)
-                ?? m_DeploymentDefinitionService.DefaultDefinition;
-            TryAddDeploymentDefinition(definition);
-        }
-
-        void TryAddDeploymentDefinition(DeploymentDefinition definition)
-        {
-            var ddefViews = GetDeploymentDefinitionViews();
-            if (ddefViews.All(x => x.DeploymentDefinition != definition))
-            {
-                AddDeploymentDefinition(definition, ddefViews.Count);
+                AddDeploymentDefinition(definitionViewModel);
             }
         }
 
-        void AddDeploymentDefinition(DeploymentDefinition definition, int nbViews)
+        DeploymentDefinitionView GetViewFromModel(IDeploymentDefinition definition)
+        {
+            return GetDeploymentDefinitionViews().First(x => x.DeploymentDefinition.Model == definition);
+        }
+
+        void AddDeploymentDefinition(IDeploymentDefinitionViewModel definitionViewModel)
         {
             var definitionView = new DeploymentDefinitionView();
-            definitionView.Bind(definition, definition == m_DeploymentDefinitionService.DefaultDefinition);
+            definitionView.Bind(definitionViewModel, definitionViewModel.Model == m_DeploymentDefinitionService.DefaultDefinition);
             definitionView.DoubleClickDeployed += (elementView) => OnDefinitionDeployedFromDoubleClick(elementView as DeploymentDefinitionView);
             definitionView.ContextMenuRequested += BuildContextMenu;
-            var index = definition == m_DeploymentDefinitionService.DefaultDefinition
-                ? 0
-                : m_DeploymentDefinitionService.DeploymentDefinitions.IndexOf(definition) + 1;
-            m_TreeViewElement.Insert(Mathf.Clamp(index, 0, nbViews), definitionView);
+            definitionView.ItemAdded += item =>
+            {
+                item.ContextMenuRequested += BuildContextMenu;
+                item.DoubleClickDeployed += viewBase => OnItemDeployedFromDoubleClick(viewBase as DeploymentItemView);
+            };
+            definitionView.ItemRemoved += item =>
+            {
+                item.ContextMenuRequested -= BuildContextMenu;
+                if (item.Selected)
+                {
+                    m_StatusPanel.Clear();
+                }
+            };
+
+            PlaceDefinitionViewInCorrectOrder(definitionView);
         }
 
-        void AddDeploymentItem(IDeploymentItemViewModel deploymentItem)
+        void PlaceDefinitionViewInCorrectOrder(DeploymentDefinitionView definitionView)
         {
-            var itemView = new DeploymentItemView();
-            itemView.Bind(deploymentItem);
-            itemView.DoubleClickDeployed += (elementView) => OnItemDeployedFromDoubleClick(elementView as DeploymentItemView);
-            itemView.ContextMenuRequested += BuildContextMenu;
-            AddDeploymentItemView(itemView);
+            var index = definitionView.DeploymentDefinition.Model == m_DeploymentDefinitionService.DefaultDefinition
+                ? 0
+                : m_DeploymentDefinitionService.ObservableDeploymentDefinitions
+                    .IndexOf((DeploymentDefinition)definitionView.DeploymentDefinition.Model) + 1;
+            m_TreeViewElement.Insert(Mathf.Clamp(index, 0, m_TreeViewElement.childCount), definitionView);
         }
 
         async void OnDefinitionDeployedFromDoubleClick(DeploymentDefinitionView definitionView)
         {
-            var itemModels = definitionView.GetDeploymentItemViews().Select(x => x.Item);
-            await m_DeploymentViewModel.DeployItemsAsync(itemModels);
+            var itemModels = definitionView.ItemViews.Select(x => x.Item);
+            var enumeratedItemModels = itemModels.ToList();
+            await m_DeploymentViewModel.DeployItemsAsync(
+                enumeratedItemModels,
+                new List<int>() {enumeratedItemModels.Count()});
             m_DeploymentWindowAnalytics.SendDoubleClickEvent(definitionView.DeploymentDefinition.Path);
         }
 
         async void OnItemDeployedFromDoubleClick(DeploymentItemView itemView)
         {
             var itemModel = GetModelFromView(itemView);
-            await m_DeploymentViewModel.DeployItemsAsync(new List<IDeploymentItemViewModel> {itemModel});
+            await m_DeploymentViewModel.DeployItemsAsync(
+                new List<IDeploymentItemViewModel> {itemModel},
+                new List<int>());
             m_DeploymentWindowAnalytics.SendDoubleClickEvent(itemModel.Path);
         }
 
@@ -348,59 +315,15 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         internal IDeploymentItemViewModel GetModelFromView(DeploymentItemView itemView)
         {
             return GetDeploymentDefinitionViews()
-                .SelectMany(v => v.GetDeploymentItemViews())
+                .SelectMany(v => v.ItemViews)
                 .First(x => x == itemView)
                 .Item;
         }
 
-        void AddDeploymentItemView(DeploymentItemView itemView)
+        void RemoveDeploymentDefinition(IDeploymentDefinitionViewModel definitionViewModel)
         {
-            var definition = m_DeploymentDefinitionService.DefinitionForPath(itemView.Item.Path)
-                ?? m_DeploymentDefinitionService.DefaultDefinition;
-            TryAddDeploymentDefinition(definition);
-
-            GetViewFromModel(definition).AddChild(itemView);
-        }
-
-        void RebuildTree()
-        {
-            var deploymentItemViews = new List<DeploymentItemView>();
-
-            foreach (var definitionView in GetDeploymentDefinitionViews())
-            {
-                foreach (var itemView in definitionView.GetDeploymentItemViews())
-                {
-                    deploymentItemViews.Add(itemView);
-                    definitionView.RemoveChild(itemView);
-                }
-            }
-
-            deploymentItemViews.ForEach(AddDeploymentItemView);
-        }
-
-        void RemoveDeploymentItem(IDeploymentItemViewModel item)
-        {
-            foreach (var deploymentDefinitionView in GetDeploymentDefinitionViews())
-            {
-                var view = deploymentDefinitionView.GetDeploymentItemViews().SingleOrDefault(v => v.Item == item);
-                if (view != null)
-                {
-                    view.Unbind();
-                    deploymentDefinitionView.RemoveChild(view);
-                    if (view.Selected)
-                    {
-                        m_StatusPanel.Clear();
-                    }
-                }
-            }
-        }
-
-        void RemoveDeploymentDefinition(DeploymentDefinition definition)
-        {
-            var definitionViewModel = GetViewFromModel(definition);
-            var deploymentItems = definitionViewModel.GetDeploymentItemViews();
-            m_TreeViewElement.Remove(definitionViewModel);
-            deploymentItems.ForEach(AddDeploymentItemView);
+            var definitionView = GetViewFromModel(definitionViewModel.Model);
+            m_TreeViewElement.Remove(definitionView);
         }
 
         internal static class VisualElementNames

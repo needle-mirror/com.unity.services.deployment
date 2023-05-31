@@ -1,5 +1,5 @@
+using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.Deployment.Editor.Shared.Logging;
-using Unity.Services.Deployment.Editor.Shared.Threading;
 using UnityEditor;
 using UnityEngine.Analytics;
 

@@ -17,7 +17,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
             var fileContent = File.ReadAllText(ctx.assetPath);
             var definition = ScriptableObject.CreateInstance<DeploymentDefinition>();
 
-            definition.PopulateFromJson(fileContent);
+            definition.FromJson(fileContent);
 
             ctx.AddObjectToAsset("MainAsset", definition, DeploymentDefinitionResources.Icon);
             ctx.SetMainObject(definition);

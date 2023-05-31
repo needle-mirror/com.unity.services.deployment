@@ -18,7 +18,9 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         IEnumerable<DeploymentDefinition> Targets => serializedObject.targetObjects.Cast<DeploymentDefinition>();
 
         ApplyRevertChangeTracker<DeploymentDefinition> m_ChangeTracker;
+        ListView m_ListView;
         VisualElement m_ApplyFooter;
+        readonly Dictionary<TextField, int> m_BindingMap = new Dictionary<TextField, int>();
 
         public override VisualElement CreateInspectorGUI()
         {
@@ -38,10 +40,8 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         {
             rootElement.Bind(m_ChangeTracker.SerializedObject);
 
-            m_ApplyFooter = rootElement.Q<VisualElement>(UxmlNames.ApplyFooter);
-
-            rootElement.Q<Button>(UxmlNames.Apply).clicked += ApplyChanges;
-            rootElement.Q<Button>(UxmlNames.Revert).clicked += RevertChanges;
+            BindApplyFooter(rootElement);
+            BindExcludePaths(rootElement);
 
             foreach (var property in rootElement.Query<PropertyField>().Build())
             {
@@ -49,6 +49,49 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
             }
 
             UpdateApplyRevertEnabled();
+        }
+
+        void BindExcludePaths(VisualElement rootElement)
+        {
+            m_ListView = rootElement.Q<ListView>();
+            m_ListView.bindItem = BindItem;
+            m_ListView.makeItem = MakeItem;
+            var ddef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
+            m_ListView.itemsSource = ddef.ExcludePaths;
+        }
+
+        static VisualElement MakeItem()
+        {
+            return new TextField()
+            {
+                isDelayed = true,
+            };
+        }
+
+        void BindItem(VisualElement visualElement, int index)
+        {
+            var textField = (TextField)visualElement;
+            m_BindingMap[textField] = index;
+            textField.UnregisterValueChangedCallback(OnExcludePathValueChanged);
+            var ddef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
+            textField.value = ddef.ExcludePaths[index];
+            textField.RegisterValueChangedCallback(OnExcludePathValueChanged);
+            UpdateApplyRevertEnabled();
+        }
+
+        void OnExcludePathValueChanged(ChangeEvent<string> changeEvent)
+        {
+            var ddef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
+            ddef.ExcludePaths[m_BindingMap[(TextField)changeEvent.target]] = changeEvent.newValue;
+            UpdateApplyRevertEnabled();
+        }
+
+        void BindApplyFooter(VisualElement rootElement)
+        {
+            m_ApplyFooter = rootElement.Q<VisualElement>(UxmlNames.ApplyFooter);
+
+            rootElement.Q<Button>(UxmlNames.Apply).clicked += ApplyChanges;
+            rootElement.Q<Button>(UxmlNames.Revert).clicked += RevertChanges;
         }
 
         void ApplyChanges()

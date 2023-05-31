@@ -13,5 +13,5 @@ For more information, including how to create an environment, refer to [Unity En
 ## Select an environment
 To select which environment to use for deploying your assets:
 
-1. In the Unity Editor navigate to **Project Settings** > **Services** > **Deployment**.
+1. In the Unity Editor navigate to **Project Settings** > **Services** > **Environments**.
 1. In the **Editor Environment** field, select the environment.

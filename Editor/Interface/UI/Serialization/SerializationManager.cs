@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Unity.Services.Deployment.Editor.Configuration;
 using Unity.Services.Deployment.Editor.JsonUtils;
-using Unity.Services.Deployment.Editor.Shared.Threading;
+using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using UnityEngine.UIElements;
 
 namespace Unity.Services.Deployment.Editor.Interface.UI.Serialization
@@ -71,7 +71,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Serialization
             return m_JsonConverter.DeserializeObject<Dictionary<string, object>>(m_Preferences.GetString(k_SerializationKey));
         }
 
-        internal void TriggerSave()
+        void TriggerSave()
         {
             if (m_State == State.Idle)
             {
@@ -84,7 +84,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Serialization
             }
         }
 
-        void Save()
+        internal void Save()
         {
             var serializableComponents = m_SerializableComponentFetcher.GetSerializableComponents(m_Control);
             var dictionary = new Dictionary<string, object>();

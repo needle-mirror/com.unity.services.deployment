@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Unity.Services.Deployment.Editor.Environments;
+using Unity.Services.Core.Editor.Environments;
+using Unity.Services.Deployment.Editor.Shared.Analytics;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEditor;
 
@@ -11,19 +12,31 @@ namespace Unity.Services.Deployment.Editor.Analytics
     class DeploymentAnalytics : IDeploymentAnalytics
     {
         const string k_EventNameDeploy = "deployment_deployed";
+        const string k_EventNameDDefDeployed = "deployment_definition_deployed";
         const int k_VersionDeploy = 2;
 
-        readonly IEnvironmentService m_EnvironmentService;
+        readonly IEnvironmentsApi m_EnvironmentService;
+        readonly ICommonAnalytics m_CommonAnalytics;
 
-        public DeploymentAnalytics(IEnvironmentService environmentService)
+        public DeploymentAnalytics(IEnvironmentsApi environmentService, ICommonAnalytics commonAnalytics)
         {
             m_EnvironmentService = environmentService;
+            m_CommonAnalytics = commonAnalytics;
             AnalyticsUtils.RegisterEventDefault(k_EventNameDeploy, k_VersionDeploy);
         }
 
         public IDeploymentAnalytics.IDeployEvent BeginDeploy(IReadOnlyDictionary<string, List<IDeploymentItem>> itemsPerProvider, string source)
         {
             return new DeployEvent(m_EnvironmentService.ActiveEnvironmentId, itemsPerProvider, source);
+        }
+
+        public void SendDeploymentDefinitionDeployedEvent(int itemsNumber)
+        {
+            m_CommonAnalytics.Send(new ICommonAnalytics.CommonEventPayload()
+            {
+                action = k_EventNameDDefDeployed,
+                count = itemsNumber
+            });
         }
 
         class DeployEvent : IDeploymentAnalytics.IDeployEvent

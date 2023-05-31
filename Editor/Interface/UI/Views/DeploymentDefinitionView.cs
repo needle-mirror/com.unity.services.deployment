@@ -1,12 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using Newtonsoft.Json;
-using Unity.Services.Deployment.Editor.DeploymentDefinitions;
 using Unity.Services.Deployment.Editor.Interface.UI.Components;
-using Unity.Services.Deployment.Editor.Interface.UI.Events;
 using Unity.Services.Deployment.Editor.Interface.UI.Serialization;
-using Unity.Services.Deployment.Editor.Shared.Threading;
+using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using UnityEngine.UIElements;
 
@@ -16,9 +16,11 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
     {
         const string k_TemplatePath = "Packages/com.unity.services.deployment/Editor/Interface/UI/Assets/Templates/DeploymentDefinitionTemplate.uxml";
 
-        public DeploymentDefinition DeploymentDefinition { get; private set; }
+        public IDeploymentDefinitionViewModel DeploymentDefinition { get; private set; }
 
-        readonly ModelBinding<DeploymentDefinition> m_ItemBindings;
+        readonly ModelBinding<IDeploymentDefinitionViewModel> m_ItemBindings;
+        readonly CollectionBinding<IDeploymentItemViewModel> m_DeploymentItemBindings;
+        readonly List<DeploymentItemView> m_ItemViews;
         bool m_IsDefault;
         string m_Path;
         State m_SortState;
@@ -28,38 +30,48 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
         public string SerializationKey => DeploymentDefinition.Path;
         public object SerializationValue => new SerializationContainer(m_CheckmarkToggle.value, m_CollapseToggle.value);
+        public List<DeploymentItemView> ItemViews => m_ItemViews;
 
         public event Action ValueChanged;
+        public event Action<DeploymentItemView> ItemAdded;
+        public event Action<DeploymentItemView> ItemRemoved;
 
         public DeploymentDefinitionView()
             : base(k_TemplatePath)
         {
-            m_ItemBindings = new ModelBinding<DeploymentDefinition>(this);
+            m_ItemBindings = new ModelBinding<IDeploymentDefinitionViewModel>(this);
             m_ItemBindings.BindProperty(nameof(DeploymentDefinitions.DeploymentDefinition.Name), def =>
             {
                 this.Q<Label>(VisualElementNames.DefinitionName).text = def.Name;
             });
             m_ItemBindings.BindProperty(nameof(DeploymentDefinitions.DeploymentDefinition.Path), def =>
             {
-                if (m_Path != def.Path)
+                if (def.Path != null
+                    && m_Path != def.Path)
                 {
                     m_Path = def.Path;
-                    RebuildTreeEvent.Send(this);
                 }
             });
+
+            m_DeploymentItemBindings = new CollectionBinding<IDeploymentItemViewModel>(this);
+            m_DeploymentItemBindings.BindCollectionChanged(OnItemObservableCollectionChanged);
+
+            m_ItemViews = new List<DeploymentItemView>();
         }
 
-        public void Bind(DeploymentDefinition definition, bool isDefault)
+        public void Bind(IDeploymentDefinitionViewModel definition, bool isDefault)
         {
+            Model = definition;
             m_IsDefault = isDefault;
             DeploymentDefinition = definition;
-            base.Model = definition;
             m_ItemBindings.Source = definition;
 
             m_CollapseToggle = this.Q<CollapseToggle>();
             m_CollapseToggle.ValueChanged += OnSerializableValueChanged;
             m_CheckmarkToggle = this.Q<CheckmarkToggle>();
             m_CheckmarkToggle.ValueChanged += OnSerializableValueChanged;
+
+            m_DeploymentItemBindings.Source = DeploymentDefinition.DeploymentItemViewModels;
 
             RefreshVisibility();
         }
@@ -73,12 +85,75 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             }
         }
 
-        public void AddChild(DeploymentItemView itemView)
+        void AddChild(DeploymentItemView itemView)
         {
             this.Q(VisualElementNames.ContainerElement).Add(itemView);
 
             TriggerSort();
             RefreshVisibility();
+        }
+
+        void OnItemObservableCollectionChanged(
+            IReadOnlyCollection<IDeploymentItemViewModel> collection,
+            NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                RemoveOldItems(new List<DeploymentItemView>(m_ItemViews));
+                AddNewItems(collection);
+            }
+            else
+            {
+                if (e.OldItems != null)
+                {
+                    RemoveOldItems(e.OldItems);
+                }
+
+                if (e.NewItems != null)
+                {
+                    AddNewItems(e.NewItems.Cast<IDeploymentItemViewModel>().ToList());
+                }
+            }
+        }
+
+        void AddNewItems(IReadOnlyCollection<IDeploymentItemViewModel> viewModels)
+        {
+            foreach (var viewModel in viewModels)
+            {
+                AddDeploymentItem(viewModel);
+            }
+        }
+
+        public void AddDeploymentItem(IDeploymentItemViewModel itemViewModel)
+        {
+            var itemView = new DeploymentItemView();
+            itemView.Bind(itemViewModel);
+            m_ItemViews.Add(itemView);
+            AddChild(itemView);
+            ItemAdded?.Invoke(itemView);
+        }
+
+        void RemoveOldItems(IEnumerable oldItems)
+        {
+            foreach (var oldItem in oldItems)
+            {
+                if (oldItem is DeploymentItemViewModel item)
+                {
+                    RemoveDeploymentItem(item);
+                }
+            }
+        }
+
+        public void RemoveDeploymentItem(IDeploymentItemViewModel viewModel)
+        {
+            var itemView = m_ItemViews.SingleOrDefault(iv => iv.Item == viewModel);
+            if (itemView != null)
+            {
+                itemView.Unbind();
+                m_ItemViews.Remove(itemView);
+                RemoveChild(itemView);
+                ItemRemoved?.Invoke(itemView);
+            }
         }
 
         void TriggerSort()
@@ -101,15 +176,10 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             }
         }
 
-        public void RemoveChild(DeploymentItemView itemView)
+        void RemoveChild(DeploymentItemView itemView)
         {
             this.Q(VisualElementNames.ContainerElement).Remove(itemView);
             RefreshVisibility();
-        }
-
-        public List<DeploymentItemView> GetDeploymentItemViews()
-        {
-            return this.Query<DeploymentItemView>().ToList();
         }
 
         public IEnumerable<DeploymentItemView> GetDeploymentViewsForDeployment(DeploymentView.ItemRetrieval itemRetrieval)
@@ -117,7 +187,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             if (itemRetrieval == DeploymentView.ItemRetrieval.Selected && Selected
                 || itemRetrieval == DeploymentView.ItemRetrieval.Checked && Checked)
             {
-                return GetDeploymentItemViews();
+                return m_ItemViews;
             }
 
             return itemRetrieval == DeploymentView.ItemRetrieval.Checked
@@ -127,13 +197,13 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
         public IEnumerable<DeploymentItemView> GetSelectedDeploymentItemViews()
         {
-            return GetDeploymentItemViews()
+            return m_ItemViews
                 .Where(i => i.Selected);
         }
 
         public IEnumerable<DeploymentItemView> GetCheckedDeploymentItemViews()
         {
-            return GetDeploymentItemViews()
+            return m_ItemViews
                 .Where(i => i.Checked);
         }
 
@@ -146,7 +216,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         {
             if (m_IsDefault)
             {
-                var hasItems = GetDeploymentItemViews().Any();
+                var hasItems = m_ItemViews.Any();
                 visible = hasItems;
                 style.display = hasItems
                     ? DisplayStyle.Flex

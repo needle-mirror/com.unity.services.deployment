@@ -15,11 +15,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
         void OnSettingsClicked()
         {
-#if ENABLE_EDITOR_GAME_SERVICES
-            SettingsService.OpenProjectSettings("Project/Services/Deployment");
-#else
             SettingsService.OpenProjectSettings("Project/Services");
-#endif
         }
 
         new class UxmlFactory : UxmlFactory<UnlinkedProjectView> {}
