@@ -7,7 +7,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Unity.Services.Deployment.Core.Model;
 using Unity.Services.Deployment.Editor.Shared.Assets;
 using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
@@ -16,7 +15,7 @@ using Logger = Unity.Services.Deployment.Editor.Shared.Logging.Logger;
 
 namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
 {
-    class DeploymentDefinition : ScriptableObject, ICopyable<DeploymentDefinition>, IDeploymentDefinition, IPath, ISerializationCallbackReceiver
+    class DeploymentDefinition : ScriptableObject, ICopyable<DeploymentDefinition>, IEditorDeploymentDefinition, IPath, ISerializationCallbackReceiver
     {
         static readonly JsonSerializerSettings k_JsonSerializerSettings = new JsonSerializerSettings
         {

@@ -6,6 +6,11 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
 {
     class DeploymentDefinitionCollection : ObservableAssets<DeploymentDefinition>
     {
+        public DeploymentDefinitionCollection(bool loadAssets)
+            : base(new AssetPostprocessorProxy(), loadAssets)
+        {
+        }
+
         public void AddForPath(DeploymentDefinition asset)
         {
             AddForPath(asset.Path, asset);

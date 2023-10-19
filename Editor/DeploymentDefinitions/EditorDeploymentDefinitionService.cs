@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using Unity.Services.Deployment.Core;
 using Unity.Services.Deployment.Core.Model;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using Unity.Services.DeploymentApi.Editor;
@@ -12,15 +13,18 @@ using Object = UnityEngine.Object;
 
 namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
 {
-    sealed class EditorDeploymentDefinitionService : IEditorDeploymentDefinitionService, IDisposable
+    sealed class EditorDeploymentDefinitionService :
+        DeploymentDefinitionServiceBase,
+        IEditorDeploymentDefinitionService,
+        IDisposable
     {
         internal const string DefaultName = "Default";
         internal const string DefaultPath = "DefaultPath";
 
-        public IDeploymentDefinition DefaultDefinition { get; }
+        public IEditorDeploymentDefinition DefaultDefinition { get; }
         public ObservableCollection<DeploymentDefinition> ObservableDeploymentDefinitions => m_DeploymentDefinitions;
-        public IReadOnlyList<IDeploymentDefinition> DeploymentDefinitions => m_DeploymentDefinitions.AsReadonly();
-        readonly DeploymentDefinitionCollection m_DeploymentDefinitions = new DeploymentDefinitionCollection();
+        public override IReadOnlyList<IDeploymentDefinition> DeploymentDefinitions => m_DeploymentDefinitions.AsReadonly();
+        readonly DeploymentDefinitionCollection m_DeploymentDefinitions = new DeploymentDefinitionCollection(true);
 
         ObservableCollection<DeploymentProvider> m_Providers;
         MergedObservableCollection<IDeploymentItem> m_MergedDeploymentItems;
@@ -45,6 +49,11 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
             DefaultDefinition = defaultDdef;
 
             ObservableDeploymentDefinitions.CollectionChanged += ObservableDeploymentDefinitionsOnCollectionChanged;
+        }
+
+        public override IDeploymentDefinition DefinitionForPath(string path)
+        {
+            return base.DefinitionForPath(path) ?? DefaultDefinition;
         }
 
         void ProvidersOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -94,6 +103,12 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
                         .ForEach(UnregisterItemModified);
                     break;
                 case NotifyCollectionChangedAction.Reset:
+                    m_MergedDeploymentItems.CollectionChanged -= ItemsOnCollectionChanged;
+                    m_MergedDeploymentItems.ForEach(UnregisterItemModified);
+                    m_MergedDeploymentItems = new MergedObservableCollection<IDeploymentItem>(
+                        m_Providers.Select(p => p.DeploymentItems.AsReadonly()));
+                    m_MergedDeploymentItems.CollectionChanged += ItemsOnCollectionChanged;
+                    m_MergedDeploymentItems.ForEach(RegisterItemModified);
                     break;
                 case NotifyCollectionChangedAction.Move:
                 case NotifyCollectionChangedAction.Replace:

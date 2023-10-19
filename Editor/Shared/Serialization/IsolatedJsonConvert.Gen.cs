@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
+using NewtonsoftFormatting = Newtonsoft.Json.Formatting;
 
 namespace Unity.Services.Deployment.Editor.Shared.Serialization
 {
@@ -15,7 +16,7 @@ namespace Unity.Services.Deployment.Editor.Shared.Serialization
         public static string SerializeObject(object value) => SerializeObject(value, null, (JsonSerializerSettings)null);
 
         [DebuggerStepThrough]
-        public static string SerializeObject(object value, Formatting formatting) => SerializeObject(value, formatting, (JsonSerializerSettings)null);
+        public static string SerializeObject(object value, NewtonsoftFormatting formatting) => SerializeObject(value, formatting, (JsonSerializerSettings)null);
 
         [DebuggerStepThrough]
         public static string SerializeObject(object value, params JsonConverter[] converters)
@@ -35,7 +36,7 @@ namespace Unity.Services.Deployment.Editor.Shared.Serialization
         [DebuggerStepThrough]
         public static string SerializeObject(
             object value,
-            Formatting formatting,
+            NewtonsoftFormatting formatting,
             params JsonConverter[] converters)
         {
             JsonSerializerSettings serializerSettings;
@@ -63,7 +64,7 @@ namespace Unity.Services.Deployment.Editor.Shared.Serialization
         [DebuggerStepThrough]
         public static string SerializeObject(
             object value,
-            Formatting formatting,
+            NewtonsoftFormatting formatting,
             JsonSerializerSettings settings)
         {
             return SerializeObject(value, null, formatting, settings);
@@ -73,7 +74,7 @@ namespace Unity.Services.Deployment.Editor.Shared.Serialization
         public static string SerializeObject(
             object value,
             Type type,
-            Formatting formatting,
+            NewtonsoftFormatting formatting,
             JsonSerializerSettings settings)
         {
             JsonSerializer jsonSerializer = JsonSerializer.Create(settings);

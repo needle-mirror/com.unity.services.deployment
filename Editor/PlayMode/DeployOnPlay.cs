@@ -54,10 +54,14 @@ namespace Unity.Services.Deployment.Editor.PlayMode
                 return;
             }
 
+            var itemsToDeploy = m_DeployOnPlayItemRetriever.GetItemsForDeployOnPlay().ToHashSet();
+            if (itemsToDeploy.Count <= 0)
+            {
+                return;
+            }
+
             using (m_DeployOnPlayAnalytics.GetEventScope())
             {
-                var itemsToDeploy = m_DeployOnPlayItemRetriever.GetItemsForDeployOnPlay().ToHashSet();
-
                 var tasks = new List<Task>();
                 using var progressBar = m_Notifications.ProgressBar(k_ProgressBarTitle,
                     k_ProgressBarInfo,

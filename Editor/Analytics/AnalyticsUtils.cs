@@ -1,12 +1,22 @@
 using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.Deployment.Editor.Shared.Logging;
 using UnityEditor;
+
+#if UNITY_2023_2_OR_NEWER
 using UnityEngine.Analytics;
+#endif
 
 namespace Unity.Services.Deployment.Editor.Analytics
 {
     static class AnalyticsUtils
     {
+#if UNITY_2023_2_OR_NEWER
+        public static void SendEvent(IAnalytic analytic)
+        {
+            EditorAnalytics.SendAnalytic(analytic);
+        }
+
+#else
         public static void RegisterEventDefault(string eventName, int version = 1)
         {
             Sync.RunNextUpdateOnMain(() =>
@@ -22,9 +32,12 @@ namespace Unity.Services.Deployment.Editor.Analytics
             });
         }
 
-        public static void LogVerbose(string eventName, int version, AnalyticsResult result)
+        public static void SendEvent(string name, object parameters, int version)
         {
-            Logger.LogVerbose($"Sent Analytics Event: {eventName}.v{version}. Result: {result}");
+            var result = EditorAnalytics.SendEventWithLimit(name, parameters, version);
+            Logger.LogVerbose($"Sent Analytics Event: {name}.v{version}. Result: {result}");
         }
+
+#endif
     }
 }

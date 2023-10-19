@@ -6,6 +6,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
 {
     interface IEditorDeploymentDefinitionService : IDeploymentDefinitionService
     {
+        IEditorDeploymentDefinition DefaultDefinition { get; }
         ObservableCollection<DeploymentDefinition> ObservableDeploymentDefinitions { get; }
         event Action DeploymentDefinitionPathChanged;
         event Action DeploymentDefinitionExcludePathsChanged;

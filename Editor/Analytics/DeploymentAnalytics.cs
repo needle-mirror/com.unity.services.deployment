@@ -5,29 +5,55 @@ using System.Linq;
 using Unity.Services.Core.Editor.Environments;
 using Unity.Services.Deployment.Editor.Shared.Analytics;
 using Unity.Services.DeploymentApi.Editor;
-using UnityEditor;
+
+#if UNITY_2023_2_OR_NEWER
+using Unity.Services.Deployment.Editor.Analytics.Events;
+using UnityEngine.Analytics;
+#endif
 
 namespace Unity.Services.Deployment.Editor.Analytics
 {
     class DeploymentAnalytics : IDeploymentAnalytics
     {
-        const string k_EventNameDeploy = "deployment_deployed";
+        public const string EventNameDeploy = "deployment_deployed";
         const string k_EventNameDDefDeployed = "deployment_definition_deployed";
-        const int k_VersionDeploy = 2;
+        public const int VersionDeploy = 2;
 
         readonly IEnvironmentsApi m_EnvironmentService;
         readonly ICommonAnalytics m_CommonAnalytics;
+#if UNITY_2023_2_OR_NEWER
+        readonly IAnalyticProvider m_AnalyticProvider;
+#endif
 
-        public DeploymentAnalytics(IEnvironmentsApi environmentService, ICommonAnalytics commonAnalytics)
+        public DeploymentAnalytics(
+            IEnvironmentsApi environmentService,
+            ICommonAnalytics commonAnalytics
+#if UNITY_2023_2_OR_NEWER
+            ,
+            IAnalyticProvider analyticProvider
+#endif
+        )
         {
             m_EnvironmentService = environmentService;
             m_CommonAnalytics = commonAnalytics;
-            AnalyticsUtils.RegisterEventDefault(k_EventNameDeploy, k_VersionDeploy);
+#if UNITY_2023_2_OR_NEWER
+            m_AnalyticProvider = analyticProvider;
+#else
+            AnalyticsUtils.RegisterEventDefault(EventNameDeploy, VersionDeploy);
+#endif
         }
 
         public IDeploymentAnalytics.IDeployEvent BeginDeploy(IReadOnlyDictionary<string, List<IDeploymentItem>> itemsPerProvider, string source)
         {
-            return new DeployEvent(m_EnvironmentService.ActiveEnvironmentId, itemsPerProvider, source);
+            return new DeployEvent(
+                m_EnvironmentService.ActiveEnvironmentId,
+                itemsPerProvider,
+                source
+#if UNITY_2023_2_OR_NEWER
+                ,
+                m_AnalyticProvider
+#endif
+            );
         }
 
         public void SendDeploymentDefinitionDeployedEvent(int itemsNumber)
@@ -45,27 +71,49 @@ namespace Unity.Services.Deployment.Editor.Analytics
             readonly Stopwatch m_Stopwatch = new();
             readonly Guid? m_Environment;
             readonly string m_Source;
+#if UNITY_2023_2_OR_NEWER
+            readonly IAnalyticProvider m_AnalyticProvider;
+#endif
 
-            public DeployEvent(Guid? environment, IReadOnlyDictionary<string, List<IDeploymentItem>> itemsPerProvider, string source)
+            public DeployEvent(
+                Guid? environment,
+                IReadOnlyDictionary<string, List<IDeploymentItem>> itemsPerProvider,
+                string source
+#if UNITY_2023_2_OR_NEWER
+                ,
+                IAnalyticProvider analyticProvider
+#endif
+            )
             {
                 m_Environment = environment;
                 m_ItemsPerProvider = itemsPerProvider;
                 m_Source = source;
                 m_Stopwatch.Start();
+#if UNITY_2023_2_OR_NEWER
+                m_AnalyticProvider = analyticProvider;
+#endif
             }
 
             public void SendSuccess()
             {
-                var result = EditorAnalytics.SendEventWithLimit(
-                    k_EventNameDeploy, CreateDeployEvent("success"), k_VersionDeploy);
-                AnalyticsUtils.LogVerbose(k_EventNameDeploy, k_VersionDeploy, result);
+#if UNITY_2023_2_OR_NEWER
+                AnalyticsUtils.SendEvent(
+                    m_AnalyticProvider.GetAnalytic<DeploymentAnalyticEvent>(CreateDeployEvent("success")));
+#else
+                AnalyticsUtils.SendEvent(
+                    EventNameDeploy, CreateDeployEvent("success"), VersionDeploy);
+#endif
             }
 
             public void SendFailure(Exception exception)
             {
-                var result = EditorAnalytics.SendEventWithLimit(
-                    k_EventNameDeploy, CreateDeployEvent("failure", exception), k_VersionDeploy);
-                AnalyticsUtils.LogVerbose(k_EventNameDeploy, k_VersionDeploy, result);
+#if UNITY_2023_2_OR_NEWER
+                AnalyticsUtils.SendEvent(
+                    m_AnalyticProvider.GetAnalytic<DeploymentAnalyticEvent>(CreateDeployEvent("failure")));
+#else
+                AnalyticsUtils.SendEvent(
+                    EventNameDeploy, CreateDeployEvent("failure", exception), VersionDeploy);
+#endif
             }
 
             DeployEventPayload CreateDeployEvent(string status, Exception exception = null)
@@ -92,7 +140,10 @@ namespace Unity.Services.Deployment.Editor.Analytics
         [Serializable]
         // Naming exception to the standard in order to match the schema
         // ReSharper disable InconsistentNaming
-        struct DeployEventPayload
+        internal struct DeployEventPayload
+#if UNITY_2023_2_OR_NEWER
+            : IAnalytic.IData
+#endif
         {
             public string environment;
             public string status;

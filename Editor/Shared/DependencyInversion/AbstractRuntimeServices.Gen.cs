@@ -61,6 +61,6 @@ namespace Unity.Services.Deployment.Editor.Shared.DependencyInversion
             return scope;
         }
 
-        internal abstract void Register(ServiceCollection collection);
+        public abstract void Register(ServiceCollection collection);
     }
 }

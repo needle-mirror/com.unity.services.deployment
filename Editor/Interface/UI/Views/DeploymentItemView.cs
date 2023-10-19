@@ -51,6 +51,11 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
                 var itemNameLabel = this.Q<Label>(VisualElementNames.ItemName);
                 itemNameLabel.text = item.Name;
             });
+            m_ItemBindings.BindProperty(nameof(ITypedItem.Type), item =>
+            {
+                var itemTypeLabel = this.Q<Label>(VisualElementNames.ItemType);
+                itemTypeLabel.text = (item.OriginalItem as ITypedItem)?.Type ?? item.Service;
+            });
             m_ItemBindings.BindProperty(nameof(Item.Progress), item =>
             {
                 var progressBar = this.Q<ProgressBar>();
@@ -93,6 +98,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             m_CheckmarkToggle.ValueChanged += OnSerializableValueChanged;
 
             this.Q<Label>(VisualElementNames.ItemService).text = item.Service;
+            this.Q<Label>(VisualElementNames.ItemType).text = (item.OriginalItem as ITypedItem)?.Type ?? item.Service;
             m_ItemStateContainer = this.Q<VisualElement>(name: VisualElementNames.ItemStateContainer);
 
             Item.States.CollectionChanged += OnItemStateCollectionChanged;
@@ -286,6 +292,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             public const string ItemStatus = "ItemStatus";
             public const string ItemStatusIcon = "ItemStatusIcon";
             public const string ItemService = "ItemService";
+            public const string ItemType = "ItemType";
             public const string ItemStateContainer = "ItemStateContainer";
         }
 

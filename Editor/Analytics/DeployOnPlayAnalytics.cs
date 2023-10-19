@@ -1,27 +1,46 @@
 using System;
 using Unity.Services.Deployment.Editor.Shared.Analytics;
-using UnityEditor;
+
+#if UNITY_2023_2_OR_NEWER
+using Unity.Services.Deployment.Editor.Analytics.Events;
+using UnityEngine.Analytics;
+#endif
 
 namespace Unity.Services.Deployment.Editor.Analytics
 {
     class DeployOnPlayAnalytics : IDeployOnPlayAnalytics
     {
-        const string k_EventNameDeployOnPlay = "deployment_deployonplay";
-        const int k_VersionDeployOnPlay = 1;
+        public const string EventNameDeployOnPlay = "deployment_deployonplay";
+        public const int VersionDeployOnPlay = 1;
 
-        public DeployOnPlayAnalytics()
+#if UNITY_2023_2_OR_NEWER
+        readonly IAnalyticProvider m_AnalyticProvider;
+
+        public DeployOnPlayAnalytics(IAnalyticProvider analyticProvider)
         {
-            AnalyticsUtils.RegisterEventDefault(k_EventNameDeployOnPlay, k_VersionDeployOnPlay);
+            m_AnalyticProvider = analyticProvider;
         }
 
-        void SendDeployOnPlayEvent(int duration)
+#else
+        public DeployOnPlayAnalytics()
+        {
+            AnalyticsUtils.RegisterEventDefault(EventNameDeployOnPlay, VersionDeployOnPlay);
+        }
+
+#endif
+
+        internal void SendDeployOnPlayEvent(int duration)
         {
             var evt = new DeployOnPlayEvent()
             {
                 msDuration = duration
             };
-            var result = EditorAnalytics.SendEventWithLimit(k_EventNameDeployOnPlay, evt, k_VersionDeployOnPlay);
-            AnalyticsUtils.LogVerbose(k_EventNameDeployOnPlay, k_VersionDeployOnPlay, result);
+
+#if UNITY_2023_2_OR_NEWER
+            AnalyticsUtils.SendEvent(m_AnalyticProvider.GetAnalytic<DeployOnPlayAnalyticEvent>(evt));
+#else
+            AnalyticsUtils.SendEvent(EventNameDeployOnPlay, evt, VersionDeployOnPlay);
+#endif
         }
 
         public IDisposable GetEventScope()
@@ -45,6 +64,9 @@ namespace Unity.Services.Deployment.Editor.Analytics
 
         [Serializable]
         struct DeployOnPlayEvent
+#if UNITY_2023_2_OR_NEWER
+            : IAnalytic.IData
+#endif
         {
             public int msDuration;
         }

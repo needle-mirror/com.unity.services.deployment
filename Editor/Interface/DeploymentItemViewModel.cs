@@ -17,6 +17,8 @@ namespace Unity.Services.Deployment.Editor.Interface
         public string Name => OriginalItem.Name;
         public string Path => OriginalItem.Path;
         public float Progress => OriginalItem.Progress;
+        public string Type { get; }
+
         public DeploymentStatus Status
         {
             get => OriginalItem.Status;
@@ -48,6 +50,7 @@ namespace Unity.Services.Deployment.Editor.Interface
         {
             Service = service;
             OriginalItem = originalItem;
+            Type = (OriginalItem as ITypedItem)?.Type ?? Service;
         }
     }
 }

@@ -58,6 +58,12 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
             m_ListView.makeItem = MakeItem;
             var ddef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
             m_ListView.itemsSource = ddef.ExcludePaths;
+            m_ListView.itemsRemoved += _ => UpdateOnNextFrame();
+
+            void UpdateOnNextFrame()
+            {
+                Sync.RunNextUpdateOnMain(UpdateApplyRevertEnabled);
+            }
         }
 
         static VisualElement MakeItem()
@@ -76,7 +82,6 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
             var ddef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
             textField.value = ddef.ExcludePaths[index];
             textField.RegisterValueChangedCallback(OnExcludePathValueChanged);
-            UpdateApplyRevertEnabled();
         }
 
         void OnExcludePathValueChanged(ChangeEvent<string> changeEvent)
@@ -108,6 +113,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         void RevertChanges()
         {
             m_ChangeTracker.Reset();
+            m_ListView.Rebuild();
             UpdateApplyRevertEnabled();
         }
 

@@ -139,7 +139,7 @@ namespace Unity.Services.Deployment.Editor.Interface
 
         void AddViewModelForDefinition(IDeploymentDefinition ddef)
         {
-            m_DefinitionViewModels.Add(new DeploymentDefinitionViewModel(ddef, m_DefinitionService, m_DeploymentProviders));
+            m_DefinitionViewModels.Add(new DeploymentDefinitionViewModel((IEditorDeploymentDefinition)ddef, m_DefinitionService, m_DeploymentProviders));
         }
 
         void RemoveViewModelForDefinition(IDeploymentDefinition ddef)

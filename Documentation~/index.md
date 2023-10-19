@@ -19,5 +19,10 @@ be saved in version control.
 
 ## Supported packages
 
-- [com.unity.services.cloudcode](https://docs.unity.com/cloud-code) **from 2.1.0**
-- [com.unity.remote-config](https://docs.unity.com/remote-config) **from 3.2.0**
+- [com.unity.services.cloudcode (javascript)](https://docs.unity.com/ugs/en-us/manual/cloud-code/manual/scripts/how-to-guides/write-scripts/unity-editor) **from 2.1.0**
+- [com.unity.services.cloudcode (C#)](https://docs.unity.com/ugs/en-us/manual/cloud-code/manual/modules/how-to-guides/write-modules/unity-editor) **from 2.5.0**
+- [com.unity.remote-config](https://docs.unity.com/ugs/en-us/manual/remote-config/manual/remote-config-files) **from 3.2.0**
+- [com.unity.services.economy](https://docs.unity.com/ugs/en-us/manual/economy/manual/deploying-resources-with-unity-editor) **from 3.2.1**
+- [com.unity.services.leaderboards](https://docs.unity.com/ugs/en-us/manual/leaderboards/manual/leaderboards) **from 2.0.0**
+- [com.unity.services.multiplay](https://docs.unity.com/ugs/en-us/manual/game-server-hosting/manual/welcome) **from 1.1.0**
+

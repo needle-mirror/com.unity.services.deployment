@@ -3,9 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using GlobExpressions;
 using Unity.Services.Deployment.Core;
-using Unity.Services.Deployment.Core.Model;
 using Unity.Services.Deployment.Editor.DeploymentDefinitions;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using Unity.Services.DeploymentApi.Editor;
@@ -19,7 +17,7 @@ namespace Unity.Services.Deployment.Editor.Interface
         ObservableCollection<DeploymentProvider> m_Providers;
         ObservableCollection<IDeploymentItemViewModel> m_DeploymentItemViewModels;
 
-        public IDeploymentDefinition Model { get; }
+        public IEditorDeploymentDefinition Model { get; }
         public IReadOnlyObservable<IDeploymentItemViewModel> DeploymentItemViewModels => m_DeploymentItemViewModels.AsReadonly();
 
         public string Name
@@ -39,7 +37,7 @@ namespace Unity.Services.Deployment.Editor.Interface
         public event PropertyChangedEventHandler PropertyChanged;
 
         public DeploymentDefinitionViewModel(
-            IDeploymentDefinition originalDefinition,
+            IEditorDeploymentDefinition originalDefinition,
             IEditorDeploymentDefinitionService deploymentDefinitionService,
             ObservableCollection<DeploymentProvider> providers)
         {
@@ -149,27 +147,10 @@ namespace Unity.Services.Deployment.Editor.Interface
         internal void TryAddItemViewModel(IDeploymentItem item, DeploymentProvider provider)
         {
             if (m_DefinitionService.DefinitionForPath(item.Path) == Model
-                && !IsItemExcluded(Model, item))
+                && !m_DefinitionService.IsPathExcludedByDeploymentDefinition(item.Path, Model))
             {
                 AddItemViewModel(item, provider);
             }
-        }
-
-        internal static bool IsItemExcluded(IDeploymentDefinition ddef, IDeploymentItem item)
-        {
-            var isExcluded = false;
-
-            foreach (var excludePath in ddef.ExcludePaths)
-            {
-                var itemFullPath = IoPath.GetFullPath(item.Path);
-                if (Glob.IsMatch(item.Path, excludePath)
-                    || Glob.IsMatch(itemFullPath, excludePath))
-                {
-                    isExcluded = true;
-                }
-            }
-
-            return isExcluded;
         }
 
         internal void AddItemViewModel(IDeploymentItem item, DeploymentProvider provider)
@@ -211,7 +192,7 @@ namespace Unity.Services.Deployment.Editor.Interface
                     var isOurs = m_DefinitionService.DefinitionForPath(item.Path) == Model;
                     var itemViewModel = m_DeploymentItemViewModels.FirstOrDefault(dvm => dvm.OriginalItem == item);
                     var itemViewModelIsInOurList = itemViewModel != null;
-                    var isItemExcluded = IsItemExcluded(Model, item);
+                    var isItemExcluded = m_DefinitionService.IsPathExcludedByDeploymentDefinition(item.Path, Model);
 
                     if ((!isOurs || isItemExcluded)
                         && itemViewModelIsInOurList)

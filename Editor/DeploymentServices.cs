@@ -38,7 +38,9 @@ namespace Unity.Services.Deployment.Editor
 #pragma warning disable 0612, 0618
                 Deployments.Instance.EnvironmentProvider = Instance.GetService<IEnvironmentProvider>();
 #pragma warning restore 0612, 0618
+#if !UNITY_2023_2_OR_NEWER
                 StaticAnalytics.RegisterEvents();
+#endif
             }
         }
 
@@ -46,11 +48,16 @@ namespace Unity.Services.Deployment.Editor
         {
         }
 
-        internal override void Register(ServiceCollection collection)
+        internal void RegisterInternal(ServiceCollection collection)
+        {
+            Register(collection);
+        }
+
+        public override void Register(ServiceCollection collection)
         {
             collection.Register(_ => Debug.unityLogger);
 
-            collection.RegisterSingleton(Factories.Default<IEditorDeploymentDefinitionService, EditorDeploymentDefinitionService>);
+            collection.RegisterStartupSingleton(Factories.Default<IEditorDeploymentDefinitionService, EditorDeploymentDefinitionService>);
 
             collection.Register(Factories.Default<IEditorEvents, EditorEvents>);
             collection.Register(Factories.Default<IPlayModeInterrupt, PlayModeInterrupt>);
@@ -58,6 +65,9 @@ namespace Unity.Services.Deployment.Editor
 
             collection.Register(Factories.Default<IDeploymentWindowAnalytics, DeploymentWindowAnalytics>);
             collection.Register(Factories.Default<ICommonAnalytics, CommonAnalytics>);
+#if UNITY_2023_2_OR_NEWER
+            collection.Register(Factories.Default<ICommonAnalyticProvider, CommonAnalyticProvider>);
+#endif
             collection.Register(Factories.Default<IDeployOnPlayAnalytics, DeployOnPlayAnalytics>);
             collection.Register(Factories.Default<IProjectPreferences, ProjectPreferences>);
             collection.Register(Factories.Default<IDeploymentAnalytics, DeploymentAnalytics>);
@@ -92,6 +102,10 @@ namespace Unity.Services.Deployment.Editor
             collection.RegisterStartupSingleton(Factories.Default<ItemStatusTracker>);
             collection.Register(Factories.Default<IFileTracker, FileTracker>);
             collection.Register(Factories.Default<AssetPostprocessorProxy>);
+
+#if UNITY_2023_2_OR_NEWER
+            collection.Register(Factories.Default<IAnalyticProvider, AnalyticProvider>);
+#endif
         }
     }
 }

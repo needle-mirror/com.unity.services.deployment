@@ -5,7 +5,7 @@ namespace Unity.Services.Deployment.Core
 {
     internal interface IDeploymentDefinitionService
     {
-        IDeploymentDefinition DefaultDefinition { get; }
         IReadOnlyList<IDeploymentDefinition> DeploymentDefinitions { get; }
+        IDeploymentDefinition DefinitionForPath(string path);
     }
 }

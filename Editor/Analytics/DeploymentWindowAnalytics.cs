@@ -2,54 +2,88 @@ using System;
 using UnityEditor;
 using Hashing = Unity.Services.Deployment.Editor.Shared.Crypto.Hash;
 
+#if UNITY_2023_2_OR_NEWER
+using Unity.Services.Deployment.Editor.Analytics.Events;
+using UnityEngine.Analytics;
+#endif
+
 namespace Unity.Services.Deployment.Editor.Analytics
 {
     class DeploymentWindowAnalytics : IDeploymentWindowAnalytics
     {
-        const string k_EventNameDoubleClickItem = "deployment_doubleclickitem";
-        const string k_EventNameContextMenuOpened = "deployment_contextmenuopened";
-        const string k_EventNameContextMenuSelect = "deployment_contextmenuselect";
-        const int k_VersionDoubleClick = 1;
-        const int k_VersionContextMenuOpened = 1;
-        const int k_VersionContextMenuSelect = 1;
+        public const string EventNameDoubleClickItem = "deployment_doubleclickitem";
+        public const string EventNameContextMenuOpened = "deployment_contextmenuopened";
+        public const string EventNameContextMenuSelect = "deployment_contextmenuselect";
+        public const int VersionDoubleClick = 1;
+        public const int VersionContextMenuOpened = 1;
+        public const int VersionContextMenuSelect = 1;
 
+#if UNITY_2023_2_OR_NEWER
+        readonly IAnalyticProvider m_AnalyticProvider;
+
+        public DeploymentWindowAnalytics(IAnalyticProvider analyticProvider)
+        {
+            m_AnalyticProvider = analyticProvider;
+        }
+
+#else
         public DeploymentWindowAnalytics()
         {
-            AnalyticsUtils.RegisterEventDefault(k_EventNameDoubleClickItem, k_VersionDoubleClick);
-            AnalyticsUtils.RegisterEventDefault(k_EventNameContextMenuOpened, k_VersionContextMenuOpened);
-            AnalyticsUtils.RegisterEventDefault(k_EventNameContextMenuSelect, k_VersionContextMenuSelect);
+            AnalyticsUtils.RegisterEventDefault(EventNameDoubleClickItem, VersionDoubleClick);
+            AnalyticsUtils.RegisterEventDefault(EventNameContextMenuOpened, VersionContextMenuOpened);
+            AnalyticsUtils.RegisterEventDefault(EventNameContextMenuSelect, VersionContextMenuSelect);
         }
+
+#endif
 
         public void SendDoubleClickEvent(string itemPath)
         {
-            var result = EditorAnalytics.SendEventWithLimit(
-                k_EventNameDoubleClickItem,
+#if UNITY_2023_2_OR_NEWER
+            AnalyticsUtils.SendEvent(
+                m_AnalyticProvider.GetAnalytic<DeploymentWindowAnalyticEvent.DoubleClick>(
+                    new ItemPathParams(itemPath)));
+#else
+            AnalyticsUtils.SendEvent(
+                EventNameDoubleClickItem,
                 new ItemPathParams(itemPath),
-                k_VersionDoubleClick);
-            AnalyticsUtils.LogVerbose(k_EventNameDoubleClickItem, k_VersionDoubleClick, result);
+                VersionDoubleClick);
+#endif
         }
 
         public void SendContextMenuOpenEvent(string itemPath)
         {
-            var result = EditorAnalytics.SendEventWithLimit(
-                k_EventNameContextMenuOpened,
+#if UNITY_2023_2_OR_NEWER
+            AnalyticsUtils.SendEvent(
+                m_AnalyticProvider.GetAnalytic<DeploymentWindowAnalyticEvent.ContextMenuOpened>(
+                    new ItemPathParams(itemPath)));
+#else
+            AnalyticsUtils.SendEvent(
+                EventNameContextMenuOpened,
                 new ItemPathParams(itemPath),
-                k_VersionContextMenuOpened);
-            AnalyticsUtils.LogVerbose(k_EventNameContextMenuOpened, k_VersionContextMenuOpened, result);
+                VersionContextMenuOpened);
+#endif
         }
 
         public void SendContextMenuSelectEvent(string itemPath)
         {
-            var result = EditorAnalytics.SendEventWithLimit(
-                k_EventNameContextMenuSelect,
+#if UNITY_2023_2_OR_NEWER
+            AnalyticsUtils.SendEvent(
+                m_AnalyticProvider.GetAnalytic<DeploymentWindowAnalyticEvent.ContextMenuSelect>(
+                    new ItemPathParams(itemPath)));
+#else
+            AnalyticsUtils.SendEvent(
+                EventNameContextMenuSelect,
                 new ItemPathParams(itemPath),
-                k_VersionContextMenuSelect);
-            AnalyticsUtils.LogVerbose(k_EventNameContextMenuSelect, k_VersionContextMenuSelect, result);
+                VersionContextMenuSelect);
+#endif
         }
 
         // Lowercase to match the naming schema
         [Serializable]
         public struct ItemPathParams
+#if UNITY_2023_2_OR_NEWER
+            : IAnalytic.IData
+#endif
         {
             static readonly GUID k_NullGUID = new GUID();
 
