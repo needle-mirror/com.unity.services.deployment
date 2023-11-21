@@ -18,21 +18,16 @@ namespace Unity.Services.Deployment.Core
                 return null;
             }
 
-            var fullPath = path;
-            if (!Path.IsPathFullyQualified(fullPath))
-            {
-                fullPath = Path.GetFullPath(fullPath);
-            }
 
-            var dirPath = Path.GetDirectoryName(fullPath);
+            var dirPath = Path.GetDirectoryName(path) ?? "";
 
             var bestPath = string.Empty;
 
             IDeploymentDefinition bestDefinition = null;
             foreach (var definition in DeploymentDefinitions)
             {
-                var definitionRootDir = Directory.GetParent(definition.Path)?.FullName;
-                if (definitionRootDir != null
+                var definitionRootDir = Path.GetDirectoryName(definition.Path);
+                if (!string.IsNullOrEmpty(definitionRootDir)
                     && dirPath.Contains(definitionRootDir)
                     && definitionRootDir.Length > bestPath.Length)
                 {

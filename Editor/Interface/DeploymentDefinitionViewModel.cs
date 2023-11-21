@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using Unity.Services.Deployment.Core;
 using Unity.Services.Deployment.Editor.DeploymentDefinitions;
+using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 using Unity.Services.DeploymentApi.Editor;
 using IoPath = System.IO.Path;
@@ -36,6 +37,8 @@ namespace Unity.Services.Deployment.Editor.Interface
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        internal readonly Sync.Throttler ThrottleVerifyItems;
+
         public DeploymentDefinitionViewModel(
             IEditorDeploymentDefinition originalDefinition,
             IEditorDeploymentDefinitionService deploymentDefinitionService,
@@ -47,12 +50,13 @@ namespace Unity.Services.Deployment.Editor.Interface
 
             m_DeploymentItemViewModels = new ObservableCollection<IDeploymentItemViewModel>();
             m_Providers.ForEach(AddItemsForProvider);
+            ThrottleVerifyItems = new Sync.Throttler(VerifyItemContents, TimeSpan.FromMilliseconds(100), Sync.ThrottleOption.Debounce);
 
             m_Providers.CollectionChanged += ProvidersOnCollectionChanged;
             Model.PropertyChanged += DefinitionModelOnPropertyChanged;
-            m_DefinitionService.DeploymentDefinitionPathChanged += VerifyItemContents;
-            m_DefinitionService.DeploymentDefinitionExcludePathsChanged += VerifyItemContents;
-            m_DefinitionService.DeploymentItemPathChanged += VerifyItemContents;
+            m_DefinitionService.DeploymentDefinitionPathChanged += ThrottleVerifyItems.Trigger;
+            m_DefinitionService.DeploymentDefinitionExcludePathsChanged += ThrottleVerifyItems.Trigger;
+            m_DefinitionService.DeploymentItemPathChanged += ThrottleVerifyItems.Trigger;
             m_DefinitionService.ObservableDeploymentDefinitions.CollectionChanged += DeploymentDefinitionsOnCollectionChanged;
         }
 
@@ -60,9 +64,9 @@ namespace Unity.Services.Deployment.Editor.Interface
         {
             m_Providers.CollectionChanged -= ProvidersOnCollectionChanged;
             Model.PropertyChanged -= DefinitionModelOnPropertyChanged;
-            m_DefinitionService.DeploymentDefinitionPathChanged -= VerifyItemContents;
-            m_DefinitionService.DeploymentDefinitionExcludePathsChanged -= VerifyItemContents;
-            m_DefinitionService.DeploymentItemPathChanged -= VerifyItemContents;
+            m_DefinitionService.DeploymentDefinitionPathChanged -= ThrottleVerifyItems.Trigger;
+            m_DefinitionService.DeploymentDefinitionExcludePathsChanged -= ThrottleVerifyItems.Trigger;
+            m_DefinitionService.DeploymentItemPathChanged -= ThrottleVerifyItems.Trigger;
             m_DefinitionService.ObservableDeploymentDefinitions.CollectionChanged -= DeploymentDefinitionsOnCollectionChanged;
         }
 
@@ -70,7 +74,7 @@ namespace Unity.Services.Deployment.Editor.Interface
         {
             if (e.Action == NotifyCollectionChangedAction.Remove)
             {
-                VerifyItemContents();
+                ThrottleVerifyItems.Trigger();
             }
         }
 
