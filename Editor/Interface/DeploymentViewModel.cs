@@ -66,7 +66,9 @@ namespace Unity.Services.Deployment.Editor.Interface
 
         async Task DeployItemsAsync(IEnumerable<IDeploymentItemViewModel> items)
         {
-            var enumeratedItems = items.EnumerateOnce();
+            var enumeratedItems = items
+                .Where(item => !item.IsBeingDeployed)
+                .EnumerateOnce();
             enumeratedItems.ForEach(item => item.IsBeingDeployed = true);
             var analytics = m_Analytics.BeginDeploy(ItemsPerProvider(enumeratedItems), k_AnalyticsSource);
             try

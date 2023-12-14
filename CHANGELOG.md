@@ -4,6 +4,17 @@ All notable changes to the Deployment package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2023-12-14
+### Added
+- Added deployment samples for the following services
+  - Economy
+  - Cloud Code Scripts & Modules
+  - Leaderboards
+  - Remote Config
+
+### Fixed
+- Fixed a bug where DeploymentItems could be deployed multiple times concurrently
+
 ## [1.2.1] - 2023-11-21
 ### Added
 - Improved overall UI performance when using multiple services
