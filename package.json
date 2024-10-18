@@ -1,18 +1,18 @@
 {
   "name": "com.unity.services.deployment",
   "displayName": "Deployment",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "unity": "2021.3",
   "description": "The Deployment package allows for a cohesive interface for the deployment of assets and configurations for UGS services.\n\nIt is not used on its own as UGS services will integrate with it.\nIt provides the base tooling, such as the Deployment Window, so that UGS services have shared functionality surrounding the deployment of the service's configuration files.",
   "dependencies": {
-    "com.unity.services.deployment.api": "1.0.0",
+    "com.unity.services.deployment.api": "1.1.2",
     "com.unity.services.core": "1.12.0"
   },
   "_upm": {
     "gameService": {
       "groupId": "devops"
     },
-    "changelog": "### Added\n- Added deployment samples for the following services\n  - Economy\n  - Cloud Code Scripts & Modules\n  - Leaderboards\n  - Remote Config\n\n### Fixed\n- Fixed a bug where DeploymentItems could be deployed multiple times concurrently"
+    "changelog": "### Added\n- Implementations to the Deployment API DeploymentWindow.\n- Can copy text straight from the Deployment details pane.\n- View in Deployment Window button in `.ddef` file.\n\n### Fixed\n- Fixed issue where the status panel would have an excessively large initial size.\n- Fixed issue where relative paths were not supported in the `ExludePaths` of the Deployment Definitions.\n- Fixed issue where placeholder text could be seen in an item's status field on tab switch.\n- Fixed issue where progress bars could disappear on tab switch.\n- Fixed issue where the GUI state of dragline position + pane size is not persisted between window instances and can find itself in an unwanted state upon opening the window."
   },
   "samples": [
     {
@@ -42,15 +42,15 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.deployment.tests": "1.3.0"
+    "com.unity.services.deployment.tests": "1.4.0"
   },
   "upmCi": {
-    "footprint": "fba51c06f9509838f825b3ccecf04f8a8a7628f4"
+    "footprint": "64c2c17fa88d30573ac3143c4edd5e8fbc94a4cc"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.deployment@1.3/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.deployment@1.4/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "baf0a678d3c8d1ed1941a064174bbe134374446c"
+    "revision": "f8397f2e2bb461261cddc01f8b3048adf9b79096"
   }
 }
