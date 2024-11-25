@@ -1,8 +1,11 @@
 // WARNING: Auto generated code. Modifications will be lost!
+// Original source 'com.unity.services.shared' @0.0.12.
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Unity.Services.DeploymentApi.Editor;
 using Unity.Services.Deployment.Editor.Shared.Analytics;
 using UnityEditor;
@@ -17,14 +20,27 @@ namespace Unity.Services.Deployment.Editor.Shared.UI.DeploymentConfigInspectorFo
 #endif
     partial class DeploymentConfigInspectorFooter : BindableElement
     {
+        const string k_ViewInDeploymentAnalyticsKey = "clicked_view_in_deployment_window_btn";
+        const string k_ViewInDashboardAnalyticsKey = "clicked_view_in_dashboard_btn";
         string m_ServiceName;
         string m_FilePath;
+        Func<Task<string>> m_DashboardUrlGetter;
         ICommonAnalytics m_CommonAnalyticsSender;
+
+        public Func<Task<string>> DashboardLinkUrlGetter
+        {
+            set
+            {
+                m_DashboardUrlGetter = value;
+                SetupBtnViewInDashboard(this);
+            }
+        }
 
         public void BindGUI(string filePath, ICommonAnalytics analyticsSender, string serviceName = "")
         {
             SetupFooterVisual();
             SetupBtnViewInDeploymentWindow(this);
+            SetupBtnViewInDashboard(this);
             m_ServiceName = serviceName ?? ReadPackageInfo().displayName;
             m_FilePath = filePath;
             m_CommonAnalyticsSender = analyticsSender;
@@ -32,9 +48,7 @@ namespace Unity.Services.Deployment.Editor.Shared.UI.DeploymentConfigInspectorFo
 
         void SetupFooterVisual([CallerFilePath] string sourceFilePath = "")
         {
-            var basePath = Path.Combine("Packages",
-                RemovePathBeforePattern(Directory.GetParent(sourceFilePath) !.FullName, ReadPackageInfo().name),
-"Assets");
+            var basePath = GetBasePath(sourceFilePath);
             var uxmlPath = Path.Combine(basePath, "DeploymentConfigInspectorFooter.uxml");
             var ussPath = Path.Combine(basePath, "DeploymentConfigInspectorFooter.uss");
             var ussDarkPath = Path.Combine(basePath, "DeploymentConfigInspectorFooterDark.uss");
@@ -49,14 +63,18 @@ namespace Unity.Services.Deployment.Editor.Shared.UI.DeploymentConfigInspectorFo
             visualTreeAsset.CloneTree(this);
         }
 
-        static string RemovePathBeforePattern(string path, string pattern)
+        string GetBasePath(string sourceFilePath)
         {
-            int patternIndex = path.LastIndexOf(pattern);
-            if (patternIndex >= 0)
-            {
-                return path.Substring(patternIndex);
-            }
-            return path;
+            var packageInfo = ReadPackageInfo();
+            var dirFullPath = Path.GetFullPath(Path.GetDirectoryName(sourceFilePath) !);
+            var editorIx = dirFullPath.IndexOf("Editor");
+            var dirRelativePath = dirFullPath.Substring(editorIx);
+
+            var basePath = Path.Combine("Packages",
+                packageInfo.name,
+                dirRelativePath,
+                "Assets");
+            return basePath;
         }
 
         PackageInfo ReadPackageInfo()
@@ -73,6 +91,35 @@ namespace Unity.Services.Deployment.Editor.Shared.UI.DeploymentConfigInspectorFo
             }
         }
 
+        void SetupBtnViewInDashboard(VisualElement myInspector)
+        {
+            var viewInDashboardBtn = myInspector.Q<Button>("view-in-dashboard-btn");
+            if (viewInDashboardBtn != null)
+            {
+                var enabled = m_DashboardUrlGetter != null;
+                if (enabled)
+                {
+                    viewInDashboardBtn.SetEnabled(true);
+                    viewInDashboardBtn.style.visibility = new StyleEnum<Visibility>(Visibility.Visible);
+                    // if we don't do this we might trigger the link more than once when clicked
+                    viewInDashboardBtn.clicked -= OnViewInDashboardClicked;
+                    viewInDashboardBtn.clicked += OnViewInDashboardClicked;
+                }
+                else
+                {
+                    viewInDashboardBtn.SetEnabled(false);
+                    viewInDashboardBtn.style.visibility = new StyleEnum<Visibility>(Visibility.Hidden);
+                }
+            }
+        }
+
+        async void OnViewInDashboardClicked()
+        {
+            SendAnalyticsEvent(k_ViewInDashboardAnalyticsKey);
+            var url = await m_DashboardUrlGetter();
+            Application.OpenURL(url);
+        }
+
         void SelectFileInDeploymentWindow()
         {
             if (File.Exists(m_FilePath))
@@ -83,7 +130,7 @@ namespace Unity.Services.Deployment.Editor.Shared.UI.DeploymentConfigInspectorFo
 
                 var deploymentItems = GetDeploymentItems();
                 Deployments.Instance.DeploymentWindow.Select(deploymentItems);
-                SendAnalyticsEvent();
+                SendAnalyticsEvent(k_ViewInDeploymentAnalyticsKey);
 #elif DEPLOYMENT_API_AVAILABLE_V1_0
                 Logging.Logger.Log("Please update your Deployment package to use this feature. A minimum version of 1.4.0 is required.");
 #endif
@@ -111,11 +158,11 @@ namespace Unity.Services.Deployment.Editor.Shared.UI.DeploymentConfigInspectorFo
         }
 
 #endif
-        void SendAnalyticsEvent()
+        void SendAnalyticsEvent(string key)
         {
             m_CommonAnalyticsSender.Send(new ICommonAnalytics.CommonEventPayload
             {
-                action = "clicked_view_in_deployment_window_btn",
+                action = key,
                 context = m_ServiceName
             });
         }
