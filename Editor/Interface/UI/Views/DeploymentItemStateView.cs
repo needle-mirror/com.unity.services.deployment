@@ -7,11 +7,13 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
     class DeploymentItemStateView : VisualElement
     {
         const string k_TemplatePath = "Packages/com.unity.services.deployment/Editor/Interface/UI/Assets/Templates/DeploymentItemStateTemplate.uxml";
+        const string k_NameInfo = "ItemInfo";
         const string k_NameWarning = "ItemWarning";
         const string k_NameError = "ItemError";
 
         VisualElement m_WarningContainer;
         VisualElement m_ErrorContainer;
+        readonly VisualElement m_InfoContainer;
 
         public AssetState ItemState { get; private set; }
 
@@ -22,6 +24,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
 
             m_WarningContainer = this.Q<VisualElement>(name: k_NameWarning);
             m_ErrorContainer = this.Q<VisualElement>(name: k_NameError);
+            m_InfoContainer = this.Q<VisualElement>(name: k_NameInfo);
         }
 
         public void Bind(AssetState assetState)
@@ -29,6 +32,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             ItemState = assetState;
             UpdateContainer(m_WarningContainer, assetState, assetState.Level == SeverityLevel.Warning);
             UpdateContainer(m_ErrorContainer, assetState, assetState.Level == SeverityLevel.Error);
+            UpdateContainer(m_InfoContainer, assetState, assetState.Level == SeverityLevel.Info);
         }
 
         void UpdateContainer(VisualElement container, AssetState assetState, bool shouldShow)

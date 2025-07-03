@@ -15,4 +15,8 @@
         <ui:VisualElement class="error-icon deployment-item__icon"/>
         <ui:Label text="Sit Amet" display-tooltip-when-elided="true" name="ItemErrorLabel" class="deployment-item__error-label deployment-item__label" />
     </ui:VisualElement>
+    <ui:VisualElement name="ItemInfo" class="deployment-item__asset-state">
+        <ui:VisualElement class="info-icon deployment-item__icon"/>
+        <ui:Label text="Sit Amet" display-tooltip-when-elided="true" class="deployment-item__label" />
+    </ui:VisualElement>
 </ui:UXML>

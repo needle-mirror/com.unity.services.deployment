@@ -4,6 +4,16 @@ All notable changes to the Deployment package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-07-03
+
+### Fixed
+- Fixed bug when using package on 2022.1 (issue with ITextSelection api)
+
+### Added
+- Support for information asset states (as opposed to warning and error states)
+- Added "Ping" support for "Select In Project Window"
+- DeploymentTracker.SyncItemsWithRemoteCommand is now called when the Editor EnvironmentId or local configuration files are changed to update their DeploymentStatus based on the remote endpoint.
+
 ## [1.4.1] - 2024-11-25
 ### Fixed
 - Fixed inspector loading for service assets, below Unity 6

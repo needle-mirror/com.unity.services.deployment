@@ -35,7 +35,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
         public StatusPanel(Label statusLabel)
         {
             m_StatusLabel = statusLabel;
-            #if UNITY_2022_1_OR_NEWER
+            #if UNITY_2022_2_OR_NEWER
             m_StatusLabel.selection.isSelectable = true;
             #endif
         }

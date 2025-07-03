@@ -66,6 +66,11 @@
     background-image: var(--unity-icons-console_entry_error);
 }
 
+.info-icon {
+    background-image: var(--unity-icons-console_entry_info);
+}
+
+
 .deployment-item__status .error-icon {
     display: none;
 }

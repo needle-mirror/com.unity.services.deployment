@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Unity.Services.Deployment.Editor.Analytics;
 using Unity.Services.Deployment.Editor.Commands;
 using Unity.Services.Deployment.Editor.Shared.Assets;
+using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEditor;
 using Command = Unity.Services.Deployment.Editor.Commands.Command;
@@ -70,10 +71,10 @@ namespace Unity.Services.Deployment.Editor.Interface
                 var window = EditorWindow.GetWindow(pb);
                 window?.ShowTab();
             }
+            Sync.RunNextUpdateOnMain(() =>
+            {
+                EditorGUIUtility.PingObject(asset);
+            });
         }
-
-
-
-
     }
 }

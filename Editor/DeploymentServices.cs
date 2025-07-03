@@ -16,6 +16,7 @@ using Unity.Services.Deployment.Editor.Shared.Assets;
 using Unity.Services.Deployment.Editor.Shared.DependencyInversion;
 using Unity.Services.Deployment.Editor.Shared.UI;
 using Unity.Services.Deployment.Editor.State;
+using Unity.Services.Deployment.Editor.SyncWithRemote;
 using Unity.Services.Deployment.Editor.Tracking;
 using Unity.Services.Deployment.Editor.Validation;
 using Unity.Services.DeploymentApi.Editor;
@@ -85,6 +86,7 @@ namespace Unity.Services.Deployment.Editor
             collection.Register(Factories.Default<IProjectIdentifierProvider, ProjectIdProvider>);
 
             collection.RegisterStartupSingleton(Factories.Default<DeploymentItemValidator>);
+            collection.RegisterStartupSingleton(Factories.Default<DeploymentItemSyncWithRemote>);
 
             collection.RegisterSingleton(Factories.Default<ICommandManager, DeploymentCommandManager>);
             collection.Register(Factories.Default<SelectInProjectWindowCommand>);

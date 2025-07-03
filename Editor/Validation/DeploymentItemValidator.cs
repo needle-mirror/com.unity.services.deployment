@@ -78,17 +78,25 @@ namespace Unity.Services.Deployment.Editor.Validation
         async Task Validate()
         {
             Logger.LogVerbose("[Validation] Job Triggered");
-            await Task.Delay(ValidationDelayMs);
+            do
+            {
+                // Voluntary throttle to wait for other possible providers to be added before triggering the validation.
+                await Task.Delay(ValidationDelayMs);
 
-            Logger.LogVerbose("[Validation] Job Started");
-            var validationTasks = m_ToValidate
-                .Where(p => p.ValidateCommand != null)
-                .Select(p => p.ValidateCommand.ExecuteAsync(p.DeploymentItems))
-                .ToList();
-            m_ToValidate.Clear();
+                Logger.LogVerbose("[Validation] Job Started");
+                var validationTasks = m_ToValidate
+                    .Where(p => p.ValidateCommand != null)
+                    .Select(p => p.ValidateCommand.ExecuteAsync(p.DeploymentItems))
+                    .ToList();
+                m_ToValidate.Clear();
 
-            await Task.WhenAll(validationTasks);
-            Logger.LogVerbose("[Validation] Job Completed");
+                await Task.WhenAll(validationTasks);
+                Logger.LogVerbose("[Validation] Job Completed");
+            }
+            // Continue until there are no more items to sync.
+            // This can happen if new items to sync are added while the sync is in progress.
+            while (m_ToValidate.Count > 0);
+            Logger.LogVerbose("[Validation] Job Closing");
         }
 
         public void Dispose()
