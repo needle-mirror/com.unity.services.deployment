@@ -7,7 +7,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
     class DeploymentDefinitionCollection : ObservableAssets<DeploymentDefinition>
     {
         public DeploymentDefinitionCollection(bool loadAssets)
-            : base(new AssetPostprocessorProxy(), loadAssets)
+            : base(new [] {".ddef" }, new AssetPostprocessorProxy(), loadAssets)
         {
         }
 
