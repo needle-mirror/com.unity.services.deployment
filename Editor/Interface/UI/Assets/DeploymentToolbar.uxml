@@ -13,7 +13,9 @@
         <uie:ToolbarButton name="HelpButton" class="toolbar-button help-button">
             <ui:VisualElement name="HelpButtonImage" class="help-button-image"/>
         </uie:ToolbarButton>
-        <uie:ToolbarMenu class="menu" />
+        <uie:ToolbarMenu class="menu" >
+            <ui:VisualElement class="deployment-options"/>
+        </uie:ToolbarMenu>
     </uie:Toolbar>
     <ui:VisualElement content-container="true" class="deployment-toolbar__content"/>
 </ui:UXML>

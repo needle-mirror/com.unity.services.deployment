@@ -52,12 +52,6 @@
     flex-grow: 1;
 }
 
-ToolbarMenu.menu {
-    background-image: var(--unity-icons-pane_options);
-    padding-left: 9px;
-    padding-right: 10px;
-    border-right-width: 0;
-}
 
 .link-text {
     color: var(--unity-colors-link-text);

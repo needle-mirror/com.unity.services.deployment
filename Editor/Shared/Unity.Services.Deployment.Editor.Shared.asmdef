@@ -1,13 +1,8 @@
 {
-    "name": "Unity.Services.Deployment",
-    "rootNamespace": "Unity.Services.Deployment.Editor",
+    "name": "Unity.Services.Deployment.Editor.Shared",
+    "rootNamespace": "Unity.Services.Deployment.Editor.Shared",
     "references": [
-        "Unity.Services.DeploymentApi",
-        "Unity.Services.Core.Editor",
-        "UnityEngine.UnityAnalyticsModule",
-        "Unity.Services.Core.Environments.Editor",
-        "Unity.Services.Deployment.Core",
-        "Unity.Services.Deployment.Editor.Shared"
+        "Unity.Services.DeploymentApi"
     ],
     "includePlatforms": [
         "Editor"
