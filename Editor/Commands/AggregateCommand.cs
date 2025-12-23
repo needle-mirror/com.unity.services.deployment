@@ -28,7 +28,8 @@ namespace Unity.Services.Deployment.Editor.Commands
                 foreach (var(provider, command) in Commands)
                 {
                     var providerObjs = objs.Where(provider.IsItemSupported).ToList();
-
+                    if (providerObjs.Count == 0)
+                        continue;
                     var task = command.Execute(providerObjs);
                     tasks.Add(task);
 

@@ -1,11 +1,19 @@
 using System.IO;
 using Unity.Services.Deployment.Editor.Shared.Analytics;
 using UnityEditor;
-using UnityEditor.ProjectWindowCallback;
+using UnityEngine;
+
+#if UNITY_6000_4_OR_NEWER
+using BaseClass = UnityEditor.ProjectWindowCallback.AssetCreationEndAction;
+using ActionIdentifier = UnityEngine.EntityId;
+#else
+using BaseClass = UnityEditor.ProjectWindowCallback.EndNameEditAction;
+using ActionIdentifier = System.Int32;
+#endif
 
 namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
 {
-    class CreateDeploymentDefinition : EndNameEditAction
+    class CreateDeploymentDefinition : BaseClass
     {
         const string k_DefaultName = "new_deployment_definition";
         const string k_EventNameCreatedDeploymentDefinition = "deployment_definition_created";
@@ -40,7 +48,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
             EditorGUIUtility.SetIconForObject(monoScript,  DeploymentDefinitionResources.Icon);
         }
 
-        public override void Action(int instanceId, string pathName, string resourceFile)
+        public override void Action(ActionIdentifier entityId, string pathName, string resourceFile)
         {
             var definition = CreateInstance<DeploymentDefinition>();
 

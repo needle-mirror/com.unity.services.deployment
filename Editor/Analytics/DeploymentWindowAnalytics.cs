@@ -7,6 +7,12 @@ using Unity.Services.Deployment.Editor.Analytics.Events;
 using UnityEngine.Analytics;
 #endif
 
+#if UNITY_6000_4_OR_NEWER
+using GUID = UnityEngine.GUID;
+#else
+using GUID = UnityEditor.GUID;
+#endif
+
 namespace Unity.Services.Deployment.Editor.Analytics
 {
     class DeploymentWindowAnalytics : IDeploymentWindowAnalytics
