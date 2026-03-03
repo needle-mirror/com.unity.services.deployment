@@ -4,6 +4,10 @@ All notable changes to the Deployment package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2026-03-03
+### Fixed
+- Fixed warning due to casting of `int` to `EntityId` which caused warnigns in 6.4+
+
 ## [1.7.1] - 2025-12-23
 ### Fixed
 - Fixed command being dispatched when an object of the type does not declare it

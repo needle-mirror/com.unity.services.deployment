@@ -1,7 +1,7 @@
 {
   "name": "com.unity.services.deployment",
   "displayName": "Deployment",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "unity": "2021.3",
   "description": "The Deployment package allows for a cohesive interface for the deployment of assets and configurations for UGS services.\n\nIt is not used on its own as UGS services will integrate with it.\nIt provides the base tooling, such as the Deployment Window, so that UGS services have shared functionality surrounding the deployment of the service's configuration files.\nCurrently supports:\n- Cloud Code\n- Economy\n- Leaderboards\n- Multiplayer Services\n\t- Server Hosting\n\t- Matchmaker\n- Services tooling\n\t- Game Overrides\n\t- Access Control\n- Remote Config",
   "dependencies": {
@@ -12,7 +12,7 @@
     "gameService": {
       "groupId": "devops"
     },
-    "changelog": "### Fixed\n- Fixed command being dispatched when an object of the type does not declare it\n- Fixed usage of an obsolete API in Unity 6.4"
+    "changelog": "### Fixed\n- Fixed warning due to casting of `int` to `EntityId` which caused warnigns in 6.4+"
   },
   "samples": [
     {
@@ -42,15 +42,15 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.deployment.tests": "1.7.1"
+    "com.unity.services.deployment.tests": "1.7.2"
   },
   "upmCi": {
-    "footprint": "897eb01030f031fa04ba28b6ed03b36ff6ad22dc"
+    "footprint": "502cc962a451f12d9ff02c51d5fbc512e6cf2952"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.deployment@1.7/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "4579c3f52c1b857fd16d819f464de224b616f95f"
+    "revision": "9c3f8fdd38439004ce9d413978b1d1e7fffea236"
   }
 }

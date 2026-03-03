@@ -33,7 +33,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
             var icon = DeploymentDefinitionResources.Icon;
 
             ProjectWindowUtil.StartNameEditingIfProjectWindowExists(
-                0,
+                default,
                 CreateInstance<CreateDeploymentDefinition>(),
                 filePath,
                 icon,
