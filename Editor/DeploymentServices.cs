@@ -40,6 +40,7 @@ namespace Unity.Services.Deployment.Editor
                 Deployments.Instance.EnvironmentProvider = Instance.GetService<IEnvironmentProvider>();
                 Deployments.Instance.ProjectIdProvider = Instance.GetService<IProjectIdentifierProvider>();
                 Deployments.Instance.DeploymentWindow = new DefaultDeploymentWindowImpl();
+
 #pragma warning restore 0612, 0618
 #if !UNITY_2023_2_OR_NEWER
                 StaticAnalytics.RegisterEvents();
@@ -56,6 +57,7 @@ namespace Unity.Services.Deployment.Editor
         {
             collection.Register(_ => Debug.unityLogger);
 
+            collection.RegisterStartupSingleton(Factories.Default<IDeploymentItemCollectionTracker, DeploymentItemCollectionTracker>);
             collection.RegisterStartupSingleton(Factories.Default<IEditorDeploymentDefinitionService, EditorDeploymentDefinitionService>);
 
             collection.Register(Factories.Default<IEditorEvents, EditorEvents>);

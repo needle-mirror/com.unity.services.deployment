@@ -41,6 +41,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Inspector
         /// </summary>
         const string FoldoutStateKey = nameof(DeploymentItemInspectorHeader) + "." + nameof(FoldoutState);
         static bool _foldoutCache = EditorPrefs.GetBool(FoldoutStateKey, true);
+
         static bool FoldoutState
         {
             get => _foldoutCache;
@@ -186,6 +187,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Inspector
                 // GUI calls doesn't take the indent size into account,
                 // so we're saving it once here to be added to CalcSize and GUI.DrawTexture.
                 var indentLevel = EditorGUI.IndentedRect(Rect.zero).xMin;
+
                 // Forcing the texture size to be 8x8 pixels.
                 var iconRect = new Rect(rect.xMin + indentLevel, rect.yMin + (rect.height - 8) / 2, 8, 8);
                 GUI.DrawTexture(iconRect, icon, ScaleMode.ScaleToFit);
@@ -197,6 +199,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Inspector
             // Drawing the file status itself in the leftover space.
             EditorGUI.LabelField(rect, GetDeploymentStatusContent(item));
         }
+
 
         /// <summary>
         /// Converts a <see cref="IDeploymentItem"/> status into a <see cref="GUIContent"/> for IMGUI display in the inspector.<br />

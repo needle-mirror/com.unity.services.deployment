@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using Unity.Services.DeploymentApi.Editor;
 
 namespace Unity.Services.Deployment.Editor.Interface.UI.Inspector
@@ -15,17 +16,23 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Inspector
         /// Lookup of <see cref="DeploymentItem"/> instance based on their path.<br />
         /// This is updated whenever the list of deployment items or providers changes.
         /// </summary>
-        readonly Dictionary<string, List<IDeploymentItem>> _deploymentLookup = new();
+        readonly Dictionary<string, List<IDeploymentItem>> m_DeploymentLookup = new();
+
+        /// <summary>
+        /// Items currently subscribed to <see cref="IDeploymentItem.PropertyChanged"/>
+        /// so we can unsubscribe before rebuilding the lookup.
+        /// </summary>
+        readonly List<IDeploymentItem> m_SubscribedItems = new();
 
         /// <summary>
         /// The deployments instance that contains the list of deployment providers and items.
         /// </summary>
-        readonly Deployments _deployments;
+        readonly Deployments m_Deployments;
 
         public DeploymentItemsLookup(Deployments deployments)
         {
-            _deployments = deployments;
-            _deployments.DeploymentProviders.CollectionChanged += OnDeploymentListChanged;
+            m_Deployments = deployments;
+            m_Deployments.DeploymentProviders.CollectionChanged += OnDeploymentListChanged;
             RefreshLookup();
         }
 
@@ -44,30 +51,41 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Inspector
                 return false;
             }
 
-            return _deploymentLookup.TryGetValue(path, out items);
+            return m_DeploymentLookup.TryGetValue(path, out items);
         }
 
         /// <summary>
         /// Update the lookup table with the current list of <see cref="IDeploymentItem"/>s.<br />
-        /// This method will also register to the <see cref="DeploymentProvider.DeploymentItems.CollectionChanged"/> event on each provider.
+        /// This method will also register to the <see cref="DeploymentProvider.DeploymentItems.CollectionChanged"/> event on each provider
+        /// and to each item's <see cref="IDeploymentItem.PropertyChanged"/> event to detect path changes.
         /// </summary>
         void RefreshLookup()
         {
-            _deploymentLookup.Clear();
-            foreach (var provider in _deployments.DeploymentProviders)
+            foreach (var item in m_SubscribedItems)
+            {
+                item.PropertyChanged -= OnItemPropertyChanged;
+            }
+            m_SubscribedItems.Clear();
+
+            m_DeploymentLookup.Clear();
+            foreach (var provider in m_Deployments.DeploymentProviders)
             {
                 provider.DeploymentItems.CollectionChanged -= OnDeploymentListChanged;
                 provider.DeploymentItems.CollectionChanged += OnDeploymentListChanged;
                 foreach (var deploymentItem in provider.DeploymentItems)
                 {
+                    deploymentItem.PropertyChanged -= OnItemPropertyChanged;
+                    deploymentItem.PropertyChanged += OnItemPropertyChanged;
+                    m_SubscribedItems.Add(deploymentItem);
+
                     if (string.IsNullOrEmpty(deploymentItem.Path))
                         continue;
 
-                    if (!_deploymentLookup.ContainsKey(deploymentItem.Path))
+                    if (!m_DeploymentLookup.ContainsKey(deploymentItem.Path))
                     {
-                        _deploymentLookup.Add(deploymentItem.Path, new List<IDeploymentItem>());
+                        m_DeploymentLookup.Add(deploymentItem.Path, new List<IDeploymentItem>());
                     }
-                    _deploymentLookup[deploymentItem.Path].Add(deploymentItem);
+                    m_DeploymentLookup[deploymentItem.Path].Add(deploymentItem);
                 }
             }
         }
@@ -75,6 +93,14 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Inspector
         void OnDeploymentListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             RefreshLookup();
+        }
+
+        void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(IDeploymentItem.Path))
+            {
+                RefreshLookup();
+            }
         }
     }
 }

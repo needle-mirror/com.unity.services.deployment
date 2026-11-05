@@ -44,6 +44,11 @@ namespace Unity.Services.Deployment.Editor.SyncWithRemote
         {
             if (e.PropertyName == nameof(IEnvironmentsApi.ActiveEnvironmentId))
             {
+                // When changing environments, clear current deployment statuses
+                m_Providers.ForEach(p =>
+                    p.DeploymentItems.ForEach(i =>
+                        i.Status = DeploymentStatus.Empty));
+
                 m_Providers.ForEach(TriggerSync);
             }
         }
@@ -103,6 +108,7 @@ namespace Unity.Services.Deployment.Editor.SyncWithRemote
                     .Where(p => p.SyncItemsWithRemoteCommand != null)
                     .Select(p => p.SyncItemsWithRemoteCommand.ExecuteAsync(p.DeploymentItems))
                     .ToList();
+
                 m_ToSync.Clear();
 
                 await Task.WhenAll(syncTasks);

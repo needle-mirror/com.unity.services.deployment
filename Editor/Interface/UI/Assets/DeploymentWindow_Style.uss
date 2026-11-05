@@ -56,3 +56,11 @@ EnvironmentView {
 EnvironmentView ToolbarMenu {
     height: 21px;
 }
+
+ReleasePointerView {
+    justify-content: space-around;
+}
+
+ReleasePointerView ToolbarMenu {
+    height: 21px;
+}

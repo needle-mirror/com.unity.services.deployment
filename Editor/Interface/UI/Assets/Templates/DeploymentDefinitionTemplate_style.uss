@@ -6,6 +6,7 @@
     flex-direction: row;
     padding: 6px 0px;
     -unity-font-style: bold;
+    overflow: hidden;
 }
 
 .deployment-set-selectable:checked .deployment-label-container {
@@ -18,6 +19,14 @@
 
 .deployment-set-selectable {
     flex-direction: column;
+}
+
+.deployment-set-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex-shrink: 1;
 }
 
 .deployment-set-container {

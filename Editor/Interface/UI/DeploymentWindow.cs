@@ -1,6 +1,10 @@
 using System.Linq;
 using Unity.Services.Core.Editor.Environments;
 using Unity.Services.Core.Editor.Environments.UI;
+#if FEATURE_LIVE_RELEASES
+using Unity.Services.Core.Editor.Releases;
+using Unity.Services.Core.Editor.Releases.UI;
+#endif
 using Unity.Services.Deployment.Editor.Analytics;
 using Unity.Services.Deployment.Editor.Commands;
 using Unity.Services.Deployment.Editor.Configuration;
@@ -42,6 +46,9 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
         protected VisualElement m_EmptyListState;
         DeploymentToolbar m_DeploymentToolbar;
         EnvironmentView m_EnvironmentView;
+#if FEATURE_LIVE_RELEASES
+        ReleaseView m_ReleaseView;
+#endif
 
         IDeploymentViewModel m_DeploymentViewModel;
         IDeploymentWindowAnalytics m_DeploymentWindowAnalytics;
@@ -123,9 +130,20 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
             m_EmptyListState = root.Q<VisualElement>(k_EmptyListStateName);
             m_EnvironmentView = root.Q<EnvironmentView>();
             m_DeploymentToolbar = root.Q<DeploymentToolbar>();
+#if FEATURE_LIVE_RELEASES
+            m_ReleaseView = new ReleaseView();
+            if (m_EnvironmentView?.parent != null)
+            {
+                var envViewParent = m_EnvironmentView.parent;
+                envViewParent.Insert(envViewParent.IndexOf(m_EnvironmentView) + 1, m_ReleaseView);
+            }
+#endif
 
-            m_DeploymentToolbar.Bind(m_DeploymentSettings);
-            m_EnvironmentView.Bind(m_EnvironmentService);
+            m_DeploymentToolbar?.Bind(m_DeploymentSettings);
+            m_EnvironmentView?.Bind(m_EnvironmentService);
+#if FEATURE_LIVE_RELEASES
+            m_ReleaseView.Bind(ReleasesApi.Instance);
+#endif
             m_DeploymentView.Bind(m_DeploymentViewModel,
                 m_DeploymentWindowAnalytics,
                 m_DeploymentDefinitionService,
@@ -208,7 +226,8 @@ namespace Unity.Services.Deployment.Editor.Interface.UI
 
             m_CurrentView = view;
             m_CurrentView.RemoveFromClassList(k_HiddenClassName);
-            m_DeploymentToolbar.DeployEnabled = m_CurrentView == m_DeploymentView;
+            if (m_DeploymentToolbar != null)
+                m_DeploymentToolbar.DeployEnabled = m_CurrentView == m_DeploymentView;
         }
 
         /// <summary>

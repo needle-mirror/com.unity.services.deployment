@@ -35,7 +35,6 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         readonly ModelBinding<IDeploymentItemViewModel> m_ItemBindings;
         readonly Dictionary<SeverityLevel, string> m_DeploymentSeverityLevelToClassName;
 
-
         public IDeploymentItemViewModel Item { get; private set; }
         public string SerializationKey =>
             ISerializableComponent.CreateKey(Item.Name, Item.Path);
@@ -108,6 +107,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
             Item.States.ForEach(AddAssetStateView);
             Item.DeploymentStateChanged += OnDeploymentStateChanged;
             Item.PropertyChanged += OnItemPropertyChanged;
+
         }
 
         void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -125,6 +125,13 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
                 return;
             }
 
+            var progressBar = this.Q<ProgressBar>();
+            if (progressBar != null)
+            {
+                progressBar.value = 0f;
+                progressBar.title = "0%";
+            }
+
             m_StatusClass = k_DeployStateName;
             SetStatusClass();
         }
@@ -133,6 +140,8 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         {
             Item.DeploymentStateChanged -= OnDeploymentStateChanged;
             Item.States.CollectionChanged -= OnItemStateCollectionChanged;
+            Item.PropertyChanged -= OnItemPropertyChanged;
+
 
             m_ItemBindings.Source = null;
             Item = null;
@@ -300,6 +309,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
                 }
             }
         }
+
 
 #if !UNITY_2023_3_OR_NEWER
         new class UxmlFactory : UxmlFactory<DeploymentItemView> {} //NOSONAR

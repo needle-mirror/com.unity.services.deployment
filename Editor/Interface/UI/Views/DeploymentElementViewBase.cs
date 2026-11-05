@@ -52,8 +52,9 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         protected virtual void OnClick(ClickEvent click)
         {
             var collapseToggle = this.Q<CollapseToggle>();
-            bool targetIsCollapseToggle = click.target == collapseToggle;
-            if (click.clickCount == 2 && !targetIsCollapseToggle)
+            var checkmarkToggle = this.Q<CheckmarkToggle>();
+            bool targetIsToggleControl = click.target == collapseToggle || click.target == checkmarkToggle;
+            if (click.clickCount == 2 && !targetIsToggleControl)
             {
                 OnDoubleClickDeployed();
             }

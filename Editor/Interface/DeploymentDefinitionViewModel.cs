@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace Unity.Services.Deployment.Editor.Interface
 
         public IEditorDeploymentDefinition Model { get; }
         public IReadOnlyObservable<IDeploymentItemViewModel> DeploymentItemViewModels => m_DeploymentItemViewModels.AsReadonly();
+        public IReadOnlyDictionary<string, object> AdditionalProperties => Model.AdditionalProperties;
 
         public string Name
         {

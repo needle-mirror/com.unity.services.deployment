@@ -30,13 +30,12 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         public static void CreateDeploymentDefinitionFile()
         {
             var filePath = k_DefaultName + DeploymentDefinitionResources.FileExtension;
-            var icon = DeploymentDefinitionResources.Icon;
 
             ProjectWindowUtil.StartNameEditingIfProjectWindowExists(
                 default,
                 CreateInstance<CreateDeploymentDefinition>(),
                 filePath,
-                icon,
+                null,
                 null);
         }
 
@@ -45,7 +44,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         {
             var monoImporter = (MonoImporter)AssetImporter.GetAtPath(k_MonoDefinitionPath);
             var monoScript = monoImporter.GetScript();
-            EditorGUIUtility.SetIconForObject(monoScript,  DeploymentDefinitionResources.Icon);
+            EditorGUIUtility.SetIconForObject(monoScript,  null);
         }
 
         public override void Action(ActionIdentifier entityId, string pathName, string resourceFile)

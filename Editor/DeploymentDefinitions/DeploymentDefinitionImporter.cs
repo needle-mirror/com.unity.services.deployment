@@ -1,4 +1,5 @@
 using System.IO;
+using Newtonsoft.Json;
 using UnityEditor.AssetImporters;
 using UnityEngine;
 
@@ -17,9 +18,16 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
             var fileContent = File.ReadAllText(ctx.assetPath);
             var definition = ScriptableObject.CreateInstance<DeploymentDefinition>();
 
-            definition.FromJson(fileContent);
+            try
+            {
+                definition.FromJson(fileContent);
+            }
+            catch (JsonReaderException e)
+            {
+                Debug.LogError($"[Deployment Definition] '{ctx.assetPath}': {e.Message}", this);
+            }
 
-            ctx.AddObjectToAsset("MainAsset", definition, DeploymentDefinitionResources.Icon);
+            ctx.AddObjectToAsset("MainAsset", definition);
             ctx.SetMainObject(definition);
         }
     }

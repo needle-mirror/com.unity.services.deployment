@@ -6,14 +6,18 @@
     background-image: var(--unity-icons-foldout-checked);
     height: 14px;
     width: 14px;
+    min-width: 14px;
     margin-left: 2px;
     margin-right: 3px;
+    flex-shrink: 0;
 }
 
 .uncollapse-toggle {
     background-image: var(--unity-icons-foldout);
     height: 14px;
     width: 14px;
+    min-width: 14px;
     margin-left: 2px;
     margin-right: 3px;
+    flex-shrink: 0;
 }

@@ -6,3 +6,5 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 [assembly: InternalsVisibleTo("GameIteration")]
 #endif
+
+[assembly: InternalsVisibleTo("Unity.Services.Deployment.Cli")]

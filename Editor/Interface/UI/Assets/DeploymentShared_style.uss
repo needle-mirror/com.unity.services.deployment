@@ -1,25 +1,64 @@
 .deployment-window-column-1 {
-    width: 45%;
-    flex: 1 1 45%;
+    width: 40%;
+    flex: 1 1 40%;
     flex-direction: column;
     align-items: flex-start;
     padding-left: 8px;
 }
 
 .deployment-window-column-2 {
-    width: 15%;
-    flex: 1 1 15%;
+    width: 13%;
+    flex: 1 1 13%;
 }
 
 .deployment-window-column-3 {
-    width: 15%;
-    flex: 1 1 15%;
+    width: 12%;
+    flex: 1 1 12%;
 }
 
 .deployment-window-column-4 {
-    width: 25%;
-    flex: 1 1 25%;
+    width: 15%;
+    flex: 1 1 15%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow: hidden;
     padding-right: 8px;
+}
+
+.deployment-window-column-5 {
+    width: 20%;
+    flex: 1 1 20%;
+    padding-right: 8px;
+}
+
+.variant-tag {
+    -unity-font-style: normal;
+    font-size: 10px;
+    margin-right: 3px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    padding: 1px 5px;
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: var(--unity-colors-default-border);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+}
+
+.variant-tag-overflow {
+    -unity-font-style: normal;
+    font-size: 10px;
+    margin-right: 3px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    padding: 1px 5px;
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: var(--unity-colors-default-border);
+    flex-shrink: 0;
+    color: var(--unity-colors-default-text-disabled);
 }
 
 .center-content {

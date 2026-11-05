@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Services.Deployment.Editor.Commands;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
 
 namespace Unity.Services.Deployment.Editor.Interface
@@ -7,6 +8,8 @@ namespace Unity.Services.Deployment.Editor.Interface
     interface IDeploymentViewModel
     {
         IReadOnlyObservable<IDeploymentDefinitionViewModel> DeploymentDefinitions { get; }
+
+        ICommandManager CommandManager { get; }
 
         Task DeployItemsAsync(
             IEnumerable<IDeploymentItemViewModel> items,

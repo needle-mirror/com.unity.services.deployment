@@ -9,7 +9,7 @@
         <ui:Label text="Name" display-tooltip-when-elided="true" class="table-header__cell deployment-window-column-1" />
         <ui:Label text="Service" display-tooltip-when-elided="true" class="table-header__cell deployment-window-column-2" />
         <ui:Label text="Type" display-tooltip-when-elided="true" class="table-header__cell deployment-window-column-3" />
-        <ui:Label text="Deployment Status" display-tooltip-when-elided="true" class="table-header__cell deployment-window-column-4" />
+        <ui:Label text="Deployment Status" display-tooltip-when-elided="true" class="table-header__cell deployment-window-column-5" />
     </ui:VisualElement>
     <ui:TwoPaneSplitView fixed-pane-index="0" fixed-pane-initial-dimension="100" orientation="Vertical">
         <dwc:TreeViewElement name="DeploymentItemList" template="DeploymentItem" class="tree-view" />

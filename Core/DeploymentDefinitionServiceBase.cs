@@ -1,8 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using GlobExpressions;
 using Unity.Services.Deployment.Core.Model;
 
 namespace Unity.Services.Deployment.Core
@@ -18,17 +15,25 @@ namespace Unity.Services.Deployment.Core
                 return null;
             }
 
+            path = Path.GetFullPath(path);
 
-            var dirPath = Path.GetDirectoryName(path) ?? "";
+            string dirPath = path;
+            if (File.Exists(path))
+            {
+                dirPath = Path.GetDirectoryName(path) ?? "";
+            }
 
             var bestPath = string.Empty;
+
+            var dirPathWithSeparator = dirPath + Path.DirectorySeparatorChar;
 
             IDeploymentDefinition bestDefinition = null;
             foreach (var definition in DeploymentDefinitions)
             {
-                var definitionRootDir = Path.GetDirectoryName(definition.Path);
+                var definitionFullPath = Path.GetFullPath(definition.Path);
+                var definitionRootDir = Path.GetDirectoryName(definitionFullPath);
                 if (!string.IsNullOrEmpty(definitionRootDir)
-                    && dirPath.Contains(definitionRootDir)
+                    && dirPathWithSeparator.StartsWith(definitionRootDir + Path.DirectorySeparatorChar, System.StringComparison.Ordinal)
                     && definitionRootDir.Length > bestPath.Length)
                 {
                     bestDefinition = definition;

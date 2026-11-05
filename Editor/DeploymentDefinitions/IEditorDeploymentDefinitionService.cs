@@ -10,6 +10,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
         ObservableCollection<DeploymentDefinition> ObservableDeploymentDefinitions { get; }
         event Action DeploymentDefinitionPathChanged;
         event Action DeploymentDefinitionExcludePathsChanged;
+        event Action DeploymentDefinitionAdditionalPropertyChanged;
         event Action DeploymentItemPathChanged;
     }
 }

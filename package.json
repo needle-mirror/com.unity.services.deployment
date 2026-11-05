@@ -1,56 +1,29 @@
 {
   "name": "com.unity.services.deployment",
   "displayName": "Deployment",
-  "version": "1.7.2",
-  "unity": "2021.3",
+  "version": "1.8.0",
+  "unity": "2022.3",
   "description": "The Deployment package allows for a cohesive interface for the deployment of assets and configurations for UGS services.\n\nIt is not used on its own as UGS services will integrate with it.\nIt provides the base tooling, such as the Deployment Window, so that UGS services have shared functionality surrounding the deployment of the service's configuration files.\nCurrently supports:\n- Cloud Code\n- Economy\n- Leaderboards\n- Multiplayer Services\n\t- Server Hosting\n\t- Matchmaker\n- Services tooling\n\t- Game Overrides\n\t- Access Control\n- Remote Config",
   "dependencies": {
-    "com.unity.services.deployment.api": "1.1.2",
-    "com.unity.services.core": "1.15.1"
+    "com.unity.services.deployment.api": "1.1.3",
+    "com.unity.services.core": "1.19.0"
   },
   "_upm": {
     "gameService": {
       "groupId": "devops"
     },
-    "changelog": "### Fixed\n- Fixed warning due to casting of `int` to `EntityId` which caused warnigns in 6.4+"
+    "changelog": "### Added\n- Added Unity services CLI commands for Deployment, available when com.unity.pipeline is installed:\n  - `list_items`, `list_definitions`, `deploy_items`, `list_item_commands`, `execute_item_command`, `create_definition`\n\n### Fixed\n- Fixed double-clicking the checkmark toggle on a deployment item or group unintentionally triggering a deploy\n- Fixed duplicate deployment definition detection not catching definitions with the same declared name in different files/folders\n- Fixed bug when deployment inspector header disappears after moving a deployment item\n- Fixed usage of disallowed `Assembly.Location` API in Unity 6.5+\n- Fixed overflow in the deployment definition header row affecting collapse and toggle buttons.\n- Fixed error spam by using EditorApplication.timeSinceStartup instead of Time.realtimeSinceStartUp in editor code."
   },
-  "samples": [
-    {
-      "displayName": "Remote Config Deployment",
-      "description": "This is a simple sample to deploy and call a Remote Configuration.",
-      "path": "Samples~/RemoteConfigDeployment"
-    },
-    {
-      "displayName": "Leaderboards Deployment",
-      "description": "This is a simple sample to deploy and call a Leaderboard configuration.",
-      "path": "Samples~/LeaderboardsDeployment"
-    },
-    {
-      "displayName": "Economy Deployment",
-      "description": "This is a simple sample to deploy and call an Economy configuration.",
-      "path": "Samples~/EconomyDeployment"
-    },
-    {
-      "displayName": "Cloud Code Modules Deployment",
-      "description": "This is a simple sample to deploy and call a Cloud Code Module.",
-      "path": "Samples~/CloudCodeModulesDeployment"
-    },
-    {
-      "displayName": "Cloud Code Scripts Deployment",
-      "description": "This is a simple sample to deploy and call a Cloud Code Script.",
-      "path": "Samples~/CloudCodeScriptsDeployment"
-    }
-  ],
   "relatedPackages": {
-    "com.unity.services.deployment.tests": "1.7.2"
+    "com.unity.services.deployment.tests": "1.8.0"
   },
   "upmCi": {
-    "footprint": "502cc962a451f12d9ff02c51d5fbc512e6cf2952"
+    "footprint": "55fb29c5c4c54aa4ff237681febe9e6db4b9bc34"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.deployment@1.7/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.deployment@1.8/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "9c3f8fdd38439004ce9d413978b1d1e7fffea236"
+    "revision": "095861715ea2ed9e3957c7ec0177005124e48bb8"
   }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Unity.Services.Deployment.Core.Logging
 {

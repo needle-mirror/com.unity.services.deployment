@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.Services.Deployment.Core;
 using Unity.Services.Deployment.Editor.Shared.Analytics;
 using Unity.Services.Deployment.Editor.Shared.EditorUtils;
 using Unity.Services.Deployment.Editor.Shared.UI.DeploymentConfigInspectorFooter;
@@ -20,9 +22,10 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         IEnumerable<DeploymentDefinition> Targets => serializedObject.targetObjects.Cast<DeploymentDefinition>();
 
         ApplyRevertChangeTracker<DeploymentDefinition> m_ChangeTracker;
-        ListView m_ListView;
+        ListView m_ExcludePathsListView;
+        HelpBox m_ExcludePathsErrorBox;
         VisualElement m_ApplyFooter;
-        readonly Dictionary<TextField, int> m_BindingMap = new Dictionary<TextField, int>();
+        readonly Dictionary<TextField, int> m_ExcludePathsBindingMap = new();
 
         public override VisualElement CreateInspectorGUI()
         {
@@ -52,6 +55,8 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         {
             rootElement.Bind(m_ChangeTracker.SerializedObject);
 
+            m_ExcludePathsErrorBox = rootElement.Q<HelpBox>(UxmlNames.ExcludePathsError);
+
             BindApplyFooter(rootElement);
             BindExcludePaths(rootElement);
 
@@ -65,31 +70,37 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
 
         void BindExcludePaths(VisualElement rootElement)
         {
-            m_ListView = rootElement.Q<ListView>();
-            m_ListView.bindItem = BindItem;
-            m_ListView.makeItem = MakeItem;
+            m_ExcludePathsListView = rootElement.Q<ListView>(UxmlNames.ExcludePaths);
+            m_ExcludePathsListView.bindItem = BindExcludePathsItem;
+            m_ExcludePathsListView.makeItem = MakeItem;
             var ddef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
-            m_ListView.itemsSource = ddef.ExcludePaths;
-            m_ListView.itemsRemoved += _ => UpdateOnNextFrame();
+            m_ExcludePathsListView.itemsSource = ddef.ExcludePaths;
+            m_ExcludePathsListView.itemsRemoved += _ => UpdateOnNextFrame();
+
+            ValidateExcludePaths();
 
             void UpdateOnNextFrame()
             {
-                Sync.RunNextUpdateOnMain(UpdateApplyRevertEnabled);
+                Sync.RunNextUpdateOnMain(() =>
+                {
+                    ValidateExcludePaths();
+                    UpdateApplyRevertEnabled();
+                });
             }
         }
 
+
         static VisualElement MakeItem()
         {
-            return new TextField()
-            {
-                isDelayed = true,
-            };
+            var container = new VisualElement();
+            container.Add(new TextField { isDelayed = true });
+            return container;
         }
 
-        void BindItem(VisualElement visualElement, int index)
+        void BindExcludePathsItem(VisualElement visualElement, int index)
         {
-            var textField = (TextField)visualElement;
-            m_BindingMap[textField] = index;
+            var textField = visualElement.Q<TextField>();
+            m_ExcludePathsBindingMap[textField] = index;
             textField.UnregisterValueChangedCallback(OnExcludePathValueChanged);
             var ddef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
             textField.value = ddef.ExcludePaths[index];
@@ -99,8 +110,27 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         void OnExcludePathValueChanged(ChangeEvent<string> changeEvent)
         {
             var ddef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
-            ddef.ExcludePaths[m_BindingMap[(TextField)changeEvent.target]] = changeEvent.newValue;
+            ddef.ExcludePaths[m_ExcludePathsBindingMap[(TextField)changeEvent.target]] = changeEvent.newValue;
+            ValidateExcludePaths();
             UpdateApplyRevertEnabled();
+        }
+
+
+        void ValidateExcludePaths()
+        {
+            var ddef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
+            var invalidPaths = ddef.GetInvalidExcludePaths();
+
+            if (invalidPaths.Count > 0)
+            {
+                m_ExcludePathsErrorBox.text = "Invalid patterns, Ignored: " + string.Join(", ", invalidPaths);
+                m_ExcludePathsErrorBox.style.display = DisplayStyle.Flex;
+            }
+            else
+            {
+                m_ExcludePathsErrorBox.text = string.Empty;
+                m_ExcludePathsErrorBox.style.display = DisplayStyle.None;
+            }
         }
 
         void BindApplyFooter(VisualElement rootElement)
@@ -113,6 +143,8 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
 
         void ApplyChanges()
         {
+            var workingDdef = (DeploymentDefinition)m_ChangeTracker.SerializedObject.targetObjects[0];
+
             m_ChangeTracker.Apply();
             foreach (var definition in Targets)
             {
@@ -125,7 +157,9 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         void RevertChanges()
         {
             m_ChangeTracker.Reset();
-            m_ListView.Rebuild();
+
+
+            m_ExcludePathsListView.Rebuild();
             UpdateApplyRevertEnabled();
         }
 
@@ -133,6 +167,7 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
         {
             m_ApplyFooter.SetEnabled(m_ChangeTracker.IsDirty());
         }
+
 
         void DisableReadonlyFlags()
         {
@@ -144,6 +179,8 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions.UI
             public const string Apply = "Apply";
             public const string Revert = "Revert";
             public const string ApplyFooter = "Apply Footer";
+            public const string ExcludePaths = "Exclude Paths";
+            public const string ExcludePathsError = "Exclude Paths Error";
         }
     }
 }

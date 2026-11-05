@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <Nullable>disable</Nullable>
-        <!--
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <!--
             Assuming that the package version is 0.x.y
             * When making additive or an API breaking changes plus possibly bugfixes increment x
               * what is an API breaking change: https://docs.google.com/document/d/1zns7VTHrmcnpimI85NJ7k9sePZEl_jNMtGlvdB8QR8I/edit
@@ -14,14 +14,13 @@
 
           NuGet cheat-sheet: https://pages.prd.mz.internal.unity3d.com/mz-developer-handbook/docs/sdk/editor-integration/deployments-package/nuget-cheat-sheet
         -->
-        <Version>0.5.0</Version>
-        <ImplicitUsings>disable</ImplicitUsings>
-        <OutputType>Library</OutputType>
-        <IsPackable>true</IsPackable>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <Compile Include="../Core/**/*.cs" />
-    </ItemGroup>
+    <Version>0.6.0</Version>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Core/**/*.cs" />
+  </ItemGroup>
 </Project>

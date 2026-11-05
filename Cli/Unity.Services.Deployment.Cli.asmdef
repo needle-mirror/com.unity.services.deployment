@@ -1,0 +1,28 @@
+{
+    "name": "Unity.Services.Deployment.Cli",
+    "rootNamespace": "Unity.Services.Deployment.Cli",
+    "references": [
+        "Unity.Services.Deployment",
+        "Unity.Services.DeploymentApi",
+        "Unity.Pipeline",
+        "Unity.Pipeline.Attributes"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_2021_3_OR_NEWER",
+        "UNITY_PIPELINE_AVAILABLE"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.pipeline",
+            "expression": "0.9.0-exp.1",
+            "define": "UNITY_PIPELINE_AVAILABLE"
+        }
+    ],
+    "noEngineReferences": false
+}

@@ -8,6 +8,10 @@ using Unity.Services.DeploymentApi.Editor;
 
 namespace Unity.Services.Deployment.Editor.Tracking
 {
+    /// <summary>
+    /// Listens to Unity's asset pipeline and raises events on <see cref="IDeploymentItem"/>s
+    /// whose backing file has been imported, moved, or deleted on disk.
+    /// </summary>
     class DeploymentItemTracker : IDeploymentItemTracker
     {
         readonly AssetPostprocessorProxy m_AssetPostprocessor;

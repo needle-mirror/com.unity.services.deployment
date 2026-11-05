@@ -21,6 +21,8 @@ namespace Unity.Services.Deployment.Editor.Interface
 
         public IReadOnlyObservable<IDeploymentDefinitionViewModel> DeploymentDefinitions => m_DefinitionViewModels.AsReadonly();
 
+        public Commands.ICommandManager CommandManager { get; }
+
         readonly ObservableCollection<DeploymentProvider> m_DeploymentProviders;
         readonly IDeploymentAnalytics m_Analytics;
         readonly ILogger m_Logger;
@@ -36,12 +38,14 @@ namespace Unity.Services.Deployment.Editor.Interface
             IEditorDeploymentDefinitionService definitionService,
             ObservableCollection<DeploymentProvider> deploymentProviders,
             IDeploymentAnalytics analytics,
+            Commands.ICommandManager commandManager,
             ILogger logger)
         {
             m_EnvironmentsApi = environmentsApi;
             m_DefinitionService = definitionService;
             m_DeploymentProviders = deploymentProviders;
             m_Analytics = analytics;
+            CommandManager = commandManager;
             m_Logger = logger;
 
             m_DefinitionViewModels = new ObservableCollection<DeploymentDefinitionViewModel>();

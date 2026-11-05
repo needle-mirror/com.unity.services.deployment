@@ -110,7 +110,7 @@ namespace Unity.Services.Deployment.Editor
 
         public void Dispose()
         {
-            m_DeploymentItemTracker.ItemAdded -= OnItemChanged;
+            m_DeploymentItemTracker.ItemAdded -= OnItemAdded;
             m_DeploymentItemTracker.ItemChanged -= OnItemChanged;
             m_DeploymentItemTracker.ItemDeleted -= OnItemDeleted;
         }

@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using Unity.Services.Deployment.Core;
 using Unity.Services.Deployment.Editor.Shared.Infrastructure.Collections;
+using Unity.Services.Deployment.Editor.Tracking;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEngine;
 using IDeploymentDefinition = Unity.Services.Deployment.Core.Model.IDeploymentDefinition;
@@ -26,22 +27,15 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
         public override IReadOnlyList<IDeploymentDefinition> DeploymentDefinitions => m_DeploymentDefinitions.AsReadonly();
         readonly DeploymentDefinitionCollection m_DeploymentDefinitions = new DeploymentDefinitionCollection(true);
 
-        ObservableCollection<DeploymentProvider> m_Providers;
-        MergedObservableCollection<IDeploymentItem> m_MergedDeploymentItems;
-
         public event Action DeploymentDefinitionPathChanged;
         public event Action DeploymentDefinitionExcludePathsChanged;
+        public event Action DeploymentDefinitionAdditionalPropertyChanged;
         public event Action DeploymentItemPathChanged;
 
         public EditorDeploymentDefinitionService(
-            ObservableCollection<DeploymentProvider> providers)
+            IDeploymentItemCollectionTracker itemCollectionTracker)
         {
-            m_Providers = providers;
-            m_Providers.CollectionChanged += ProvidersOnCollectionChanged;
-            m_MergedDeploymentItems = new MergedObservableCollection<IDeploymentItem>(
-                m_Providers.Select(p => p.DeploymentItems.AsReadonly()));
-            m_MergedDeploymentItems.CollectionChanged += ItemsOnCollectionChanged;
-            m_MergedDeploymentItems.ForEach(RegisterItemModified);
+            itemCollectionTracker.ItemPropertyChanged += OnDeploymentItemPropertyChanged;
 
             var defaultDdef = ScriptableObject.CreateInstance<DeploymentDefinition>();
             defaultDdef.Name = DefaultName;
@@ -56,86 +50,9 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
             return base.DefinitionForPath(path) ?? DefaultDefinition;
         }
 
-        void ProvidersOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        void OnDeploymentItemPropertyChanged(IDeploymentItem item, string propertyName)
         {
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    e.NewItems.Cast<DeploymentProvider>()
-                        .ForEach(p => m_MergedDeploymentItems.AddCollection(p.DeploymentItems.AsReadonly()));
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    if (e.OldItems.Count > 1)
-                    {
-                        throw new NotImplementedException("Can not remove more than 1 DeploymentProvider at a time");
-                    }
-
-                    e.OldItems.Cast<DeploymentProvider>()
-                        .ForEach(p => m_MergedDeploymentItems.RemoveCollectionAt(e.OldStartingIndex));
-                    break;
-                case NotifyCollectionChangedAction.Reset:
-                    m_MergedDeploymentItems.ClearCollections();
-                    m_MergedDeploymentItems = new MergedObservableCollection<IDeploymentItem>(
-                        m_Providers.Select(p => p.DeploymentItems.AsReadonly()));
-                    break;
-                case NotifyCollectionChangedAction.Move:
-                case NotifyCollectionChangedAction.Replace:
-                    throw new NotImplementedException($"{nameof(EditorDeploymentDefinitionService)} does not support {e.Action}");
-                default:
-                    throw new ArgumentOutOfRangeException($"Unknown action {e.Action}");
-            }
-        }
-
-        void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    e.NewItems
-                        .Cast<IDeploymentItem>()
-                        .ForEach(i =>
-                        {
-                            UnregisterItemModified(i);
-                            RegisterItemModified(i);
-                        });
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    e.OldItems.Cast<IDeploymentItem>()
-                        .ForEach(UnregisterItemModified);
-                    break;
-                case NotifyCollectionChangedAction.Reset:
-                    m_MergedDeploymentItems.CollectionChanged -= ItemsOnCollectionChanged;
-                    m_MergedDeploymentItems.ForEach(UnregisterItemModified);
-                    m_MergedDeploymentItems = new MergedObservableCollection<IDeploymentItem>(
-                        m_Providers.Select(p => p.DeploymentItems.AsReadonly()));
-                    m_MergedDeploymentItems.CollectionChanged += ItemsOnCollectionChanged;
-                    m_MergedDeploymentItems.ForEach(RegisterItemModified);
-                    break;
-                case NotifyCollectionChangedAction.Move:
-                case NotifyCollectionChangedAction.Replace:
-                    throw new NotImplementedException($"{nameof(EditorDeploymentDefinitionService)} does not support {e.Action}");
-                default:
-                    throw new ArgumentOutOfRangeException($"Unknown action {e.Action}");
-            }
-        }
-
-        void RegisterItemModified(IDeploymentItem deploymentItem)
-        {
-            if (deploymentItem == null)
-                return;
-            deploymentItem.PropertyChanged += OnDeploymentItemPropertyChanged;
-        }
-
-        void UnregisterItemModified(IDeploymentItem deploymentItem)
-        {
-            if (deploymentItem == null)
-                return;
-            deploymentItem.PropertyChanged -= OnDeploymentItemPropertyChanged;
-        }
-
-        void OnDeploymentItemPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(IDeploymentItem.Path))
+            if (propertyName == nameof(IDeploymentItem.Path))
             {
                 DeploymentItemPathChanged?.Invoke();
             }
@@ -187,6 +104,10 @@ namespace Unity.Services.Deployment.Editor.DeploymentDefinitions
             if (e.PropertyName == nameof(IDeploymentDefinition.Path))
             {
                 DeploymentDefinitionPathChanged?.Invoke();
+            }
+            else if (e.PropertyName == nameof(IDeploymentDefinition.AdditionalProperties))
+            {
+                DeploymentDefinitionAdditionalPropertyChanged?.Invoke();
             }
         }
 

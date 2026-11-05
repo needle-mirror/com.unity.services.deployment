@@ -16,7 +16,7 @@ namespace Unity.Services.Deployment.Editor.Shared.EditorUtils
             string m_LastTrace;
             readonly object m_Lock = new object();
             bool m_ActionPending;
-            float m_Deadline;
+            double m_Deadline;
             readonly ThrottleOption m_Mode;
 
             public Throttler(Action action, TimeSpan timeout, ThrottleOption mode = ThrottleOption.Trailing)
@@ -28,7 +28,7 @@ namespace Unity.Services.Deployment.Editor.Shared.EditorUtils
 
             void EditorCallback()
             {
-                if (Time.realtimeSinceStartup < m_Deadline)
+                if (EditorApplication.timeSinceStartup < m_Deadline)
                 {
                     // keep going the timeout is not reached
                     return;
@@ -58,7 +58,7 @@ namespace Unity.Services.Deployment.Editor.Shared.EditorUtils
 
             void SetupDeadline()
             {
-                m_Deadline = Time.realtimeSinceStartup + (float)m_Timeout.TotalSeconds;
+                m_Deadline = EditorApplication.timeSinceStartup + m_Timeout.TotalSeconds;
             }
 
             // Flush will trigger the throttled action immediately without waiting for the deadline or the editor callback

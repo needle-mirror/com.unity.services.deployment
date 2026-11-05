@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,22 +13,32 @@ namespace Unity.Services.Deployment.Core
         public static bool HasDuplicateDeploymentDefinitions(this IDeploymentDefinitionService service, out string duplicationError)
         {
             duplicationError = string.Empty;
-            var paths = service.DeploymentDefinitions
-                .Select(dDef => Path.GetDirectoryName(dDef.Path));
-            var duplicates = paths
+            var error = new StringBuilder();
+
+            var duplicateFolders = service.DeploymentDefinitions
+                .Select(dDef => Path.GetDirectoryName(dDef.Path))
                 .GroupBy(p => p)
                 .Where(g => g.Count() > 1)
-                .Select(x => x.Key)
-                .ToList();
+                .Select(x => x.Key);
 
-            if (duplicates.Any())
+            foreach (var path in duplicateFolders)
             {
-                var error = new StringBuilder();
-                duplicates.ForEach(path =>
-                    error.AppendLine($"Folder <{path}> contains multiple deployment definition files."));
+                error.AppendLine($"Folder <{path}> contains multiple deployment definition files.");
+            }
 
+            var duplicateNames = service.DeploymentDefinitions
+                .GroupBy(dDef => dDef.Name)
+                .Where(g => g.Count() > 1)
+                .Select(x => x.Key);
+
+            foreach (var name in duplicateNames)
+            {
+                error.AppendLine($"Multiple deployment definition files are named <{name}>.");
+            }
+
+            if (error.Length > 0)
+            {
                 duplicationError = error.ToString().TrimEnd();
-
                 return true;
             }
 
@@ -38,39 +50,63 @@ namespace Unity.Services.Deployment.Core
             string path,
             IDeploymentDefinition deploymentDefinition)
         {
-            var isExcluded = false;
+            if (string.IsNullOrEmpty(path))
+                return false;
+
+            var normalizedPath = GetNormalizedPath(path);
+            var normalizedItemFullPath = GetNormalizedPath(Path.GetFullPath(path));
+            var fileName = Path.GetFileName(normalizedPath);
+            var parentDir = Directory.GetParent(deploymentDefinition.Path);
+
             foreach (var excludePath in deploymentDefinition.ExcludePaths)
             {
-                var normalizedPath = GetNormalizedPath(path);
-                var normalizedItemFullPath = GetNormalizedPath(Path.GetFullPath(path));
-                var normalizedExcludePath = GetNormalizedPath(excludePath);
-
-                if (Glob.IsMatch(normalizedPath, normalizedExcludePath)
-                    || Glob.IsMatch(normalizedItemFullPath, normalizedExcludePath)
-                    || Glob.IsMatch(Path.GetFileName(normalizedPath), normalizedExcludePath))
+                try
                 {
-                    isExcluded = true;
-                }
+                    var normalizedExcludePath = GetNormalizedPath(excludePath);
 
-                // see if relative path is a match
-                if (!isExcluded)
-                {
-                    var parentDir = Directory.GetParent(deploymentDefinition.Path);
+                    if (Glob.IsMatch(normalizedPath, normalizedExcludePath)
+                        || Glob.IsMatch(normalizedItemFullPath, normalizedExcludePath)
+                        || Glob.IsMatch(fileName, normalizedExcludePath))
+                    {
+                        return true;
+                    }
+
                     if (parentDir != null)
                     {
-                        // transform the relative path into a full path
                         var normalizedExcludeFullPath = GetNormalizedPath(Path.GetFullPath(Path.Combine(parentDir.FullName, excludePath)));
-                        isExcluded = Glob.IsMatch(normalizedExcludeFullPath, normalizedItemFullPath);
+                        if (Glob.IsMatch(normalizedExcludeFullPath, normalizedItemFullPath))
+                        {
+                            return true;
+                        }
                     }
                 }
-
-                if (isExcluded)
+                catch (Exception)
                 {
-                    return true;
+                    continue;
                 }
             }
 
             return false;
+        }
+
+        public static IReadOnlyList<string> GetInvalidExcludePaths(this IDeploymentDefinition definition)
+        {
+            var invalidPaths = new List<string>();
+            foreach (var excludePath in definition.ExcludePaths)
+            {
+                if (string.IsNullOrWhiteSpace(excludePath))
+                    continue;
+                try
+                {
+                    Glob.IsMatch("test", excludePath);
+                }
+                catch (Exception)
+                {
+                    invalidPaths.Add(excludePath);
+                }
+            }
+
+            return invalidPaths;
         }
 
         static string GetNormalizedPath(string path)

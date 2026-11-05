@@ -6,6 +6,7 @@
         "Unity.Services.Core.Editor",
         "UnityEngine.UnityAnalyticsModule",
         "Unity.Services.Core.Environments.Editor",
+        "Unity.Services.Core.Releases.Editor",
         "Unity.Services.Deployment.Core",
         "Unity.Services.Deployment.Editor.Shared"
     ],

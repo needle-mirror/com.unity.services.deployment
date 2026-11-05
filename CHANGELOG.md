@@ -4,9 +4,26 @@ All notable changes to the Deployment package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+
+## [1.8.0] - 2026-11-05
+### Added
+- Added Unity services CLI commands for Deployment, available when com.unity.pipeline is installed:
+  - `list_items`, `list_definitions`, `deploy_items`, `list_item_commands`, `execute_item_command`, `create_definition`
+
+### Fixed
+- Fixed double-clicking the checkmark toggle on a deployment item or group unintentionally triggering a deploy
+- Fixed duplicate deployment definition detection not catching definitions with the same declared name in different files/folders
+- Fixed bug when deployment inspector header disappears after moving a deployment item
+- Fixed usage of disallowed `Assembly.Location` API in Unity 6.5+
+- Fixed overflow in the deployment definition header row affecting collapse and toggle buttons.
+- Fixed error spam by using EditorApplication.timeSinceStartup instead of Time.realtimeSinceStartUp in editor code.
+
 ## [1.7.2] - 2026-03-03
 ### Fixed
 - Fixed warning due to casting of `int` to `EntityId` which caused warnigns in 6.4+
+
+### Added
+- Added custom icon for Deployment Definition (.ddef) configuration files
 
 ## [1.7.1] - 2025-12-23
 ### Fixed

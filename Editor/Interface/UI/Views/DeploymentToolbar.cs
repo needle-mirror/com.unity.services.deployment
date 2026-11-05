@@ -82,7 +82,7 @@ namespace Unity.Services.Deployment.Editor.Interface.UI.Views
         }
 
 #if !UNITY_2023_3_OR_NEWER
-        new class UxmlFactory : UxmlFactory<DeploymentToolbar> {}
+        new class UxmlFactory : UxmlFactory<DeploymentToolbar> {} // NOSONAR
 #endif
     }
 }
